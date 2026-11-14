@@ -132,9 +132,22 @@ def main(argv=None) -> int:
 
     print(f"wake_watch: plugin dir {plugin}", flush=True)
     seen = {p.name for p in pending_jobs(jobs)}
+    # A job that was fired at but never drained is retried: the accelerator only
+    # fires in the FOREGROUND window, so a single keystroke is lost whenever the
+    # user (or another app) has focus — and then the job sits in the queue
+    # forever while the server waits out its timeout. fired_at tracks the last
+    # attempt per job; RETRY_AFTER/S and MAX_TRIES bound the retries.
+    fired_at = {}
+    tries = {}
+    reported = set()
+    RETRY_AFTER, MAX_TRIES = 4.0, 6
     if seen:
         print(f"  {len(seen)} job(s) already queued — firing once", flush=True)
         send_start_shortcut(0, args.verbose)
+        now = time.time()
+        for name in seen:
+            fired_at[name] = now
+            tries[name] = 1
     wake_mtime = wake.stat().st_mtime if wake.exists() else 0.0
     beat_fail = 0
 
@@ -167,12 +180,40 @@ def main(argv=None) -> int:
                 send_start_shortcut(0, args.verbose)
 
         current = pending_jobs(jobs)
+        names = {p.name for p in current}
         new = [p for p in current if p.name not in seen]
         if new:
             print(f"job {new[0].name} (+{len(new) - 1} more) — firing", flush=True)
             send_start_shortcut(0, args.verbose)
-            seen |= {p.name for p in new}
-        seen &= {p.name for p in current}             # forget drained jobs
+            now = time.time()
+            for p in new:
+                seen.add(p.name)
+                fired_at[p.name] = now
+                tries[p.name] = 1
+        else:
+            # Still queued after a fire attempt: the keystroke did not land.
+            now = time.time()
+            stuck = [n for n in names
+                     if now - fired_at.get(n, 0) > RETRY_AFTER
+                     and tries.get(n, 0) < MAX_TRIES]
+            if stuck:
+                for n in stuck:
+                    tries[n] = tries.get(n, 0) + 1
+                    fired_at[n] = now
+                print(f"job {stuck[0]} still queued — refiring "
+                      f"({tries[stuck[0]]}/{MAX_TRIES})", flush=True)
+                send_start_shortcut(0, args.verbose)
+            else:
+                for n in names:
+                    if tries.get(n, 0) >= MAX_TRIES and n not in reported:
+                        reported.add(n)
+                        print(f"  giving up on {n} after {MAX_TRIES} tries — "
+                              "is Vectorworks running and the menu command "
+                              "assigned (Ctrl+Shift+B)?", flush=True)
+        seen &= names                                 # forget drained jobs
+        for gone in [n for n in fired_at if n not in names]:
+            fired_at.pop(gone, None)
+            tries.pop(gone, None)
 
         if args.once:
             return 0

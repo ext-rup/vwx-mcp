@@ -31,11 +31,11 @@ def close_document(p):
 def switch_document(p):
     name = (p.get("name") or "").lower()
     if name not in [d.lower() for d in STATE["open"]]:
-        return {"error": "Dieses Dokument ist nicht offen.", "offen": STATE["open"]}
+        return {"error": "Dieses Dokument ist nicht offen.", "open": STATE["open"]}
     if STATE.get("ignore_switch"):
-        return {"status": "angestossen"}
+        return {"status": "requested"}
     STATE["pending"] = next(d for d in STATE["open"] if d.lower() == name)
-    return {"status": "angestossen"}
+    return {"status": "requested"}
 '''
 
 

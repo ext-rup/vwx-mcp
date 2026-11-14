@@ -423,6 +423,15 @@ input, briefly focuses VW). The menu command must be in the workspace:
 0 is dropped silently, so the script allocates a real ID.
 Without it the verbs still work and say `catalog: fallback`.
 
+## Language: the client surface is English
+
+Upstream was written against a German install, so `list_documents` answered
+`{"aktiv": ..., "datei": ...}` and `vw_dialog_press` said "Knopf 'OK' nicht
+gefunden". That is translated: keys, messages and docstrings are English.
+German **data** names stay (`Höhe`, `LL-Erdbau`, `CGA_TG`, `LL_03_Bäume` — they
+are real names in a German document). `tests/test_english_surface.py` enforces
+the split; mapping table and the inline-comment remainder: `docs/ENGLISH.md`.
+
 ## macOS
 
 Everything here was built on Windows. `docs/MACOS.md` is the handoff: what is

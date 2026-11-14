@@ -519,9 +519,9 @@ def _request_switch(target):
     except Exception as e:
         return 'DOC_SWITCH_FAILED', {'detail': repr(e)}
     if isinstance(r, dict) and r.get('error'):
-        if r.get('kandidaten'):
-            return 'DOC_AMBIGUOUS', {'kandidaten': r.get('kandidaten')}
-        return 'DOC_NOT_OPEN', {'offen': r.get('offen', [])}
+        if r.get('candidates'):
+            return 'DOC_AMBIGUOUS', {'candidates': r.get('candidates')}
+        return 'DOC_NOT_OPEN', {'open': r.get('open', [])}
     return None
 
 
@@ -610,7 +610,7 @@ def pump_all():
                 if _effective_target(doc, st) == sw['target']:
                     _fail_job(fn, 'DOC_SWITCH_FAILED',
                               'Vectorworks did not bring %s to the front.' % sw['target'],
-                              {'aktiv': active[0]})
+                              {'active': active[0]})
             st.pop('switch', None)
 
     done = 0

@@ -308,18 +308,17 @@ def _fenster_klasse(u, ctypes, h):
 def _dokumentfenster():
     """Every VW document window in this process.
 
-    Returns (liste, mdi_client, diagnose). Each entry carries hwnd, title and
-    the file name teased out of it; mdi_client is the MDI container when VW
-    uses one, so the caller knows which message to post. diagnose also
-    carries 'aktiv_hwnd' — the MDI child currently on top of the Z-order,
+    Returns (windows, mdi_client, diagnostics). Each entry carries hwnd, title
+    and the file name teased out of it; mdi_client is the MDI container when VW
+    uses one, so the caller knows which message to post. diagnostics also
+    carries 'active_hwnd' — the MDI child currently on top of the Z-order,
     which MDICLIENT always keeps for whichever child is active. That is a
     plain, read-only Z-order query (GetTopWindow), not a message post — it
     changes nothing and is safe to call while the script is still running,
-    unlike WM_MDIACTIVATE.
-    """
+    unlike WM_MDIACTIVATE."""
     teile = _win32()
     if not teile:
-        return [], None, {'grund': 'kein Windows-API (ctypes fehlt)'}
+        return [], None, {'reason': 'no Windows API (ctypes missing)'}
     u, pid, ctypes, wintypes = teile
 
     EnumProc = ctypes.WINFUNCTYPE(wintypes.BOOL, wintypes.HWND, wintypes.LPARAM)
@@ -350,9 +349,9 @@ def _dokumentfenster():
             # (Toolbars, Paletten, ...) — ohne erkennbaren Dateinamen zu
             # unsicher, um es als Dokument zu fuehren.
             return None
-        return {'hwnd': int(h), 'titel': t, 'datei': datei,
-                'klasse': _fenster_klasse(u, ctypes, h), 'quelle': quelle,
-                'titel_leer': not bool(t.strip())}
+        return {'hwnd': int(h), 'title': t, 'file': datei,
+                'class': _fenster_klasse(u, ctypes, h), 'source': quelle,
+                'title_empty': not bool(t.strip())}
 
     gefunden, gesehen = [], set()
     for client in mdi_clients:
@@ -386,8 +385,8 @@ def _dokumentfenster():
     # Fenster ohne eigenen Dateinamen bestmoeglich aufloesen: wenn eines davon
     # das aktuell aktive MDI-Kind ist (typischer Fall: maximiertes, aktives
     # Dokument), den Namen aus dem Titel des Rahmenfensters ableiten. Klar als
-    # 'geraten' markieren — das ist Herleitung, kein direkter Fensterwert.
-    leere = [e for e in gefunden if not e['datei']]
+    # 'guessed' markieren — das ist Herleitung, kein direkter Fensterwert.
+    leere = [e for e in gefunden if not e['file']]
     if leere and aktiv_hwnd is not None:
         aus_rahmen = ''
         for h in oberste:
@@ -397,13 +396,13 @@ def _dokumentfenster():
         if aus_rahmen:
             for e in leere:
                 if e['hwnd'] == aktiv_hwnd:
-                    e['datei'] = aus_rahmen
-                    e['quelle'] = 'mdi-rahmen-titel'
-                    e['geraten'] = True
+                    e['file'] = aus_rahmen
+                    e['source'] = 'mdi-frame-title'
+                    e['guessed'] = True
 
-    diagnose = {'oberste': len(oberste), 'kinder': len(kinder),
-                'mdi_clients': len(mdi_clients), 'aktiv_hwnd': aktiv_hwnd,
-                'unbenannt': len([e for e in gefunden if not e['datei']])}
+    diagnose = {'top_level': len(oberste), 'children': len(kinder),
+                'mdi_clients': len(mdi_clients), 'active_hwnd': aktiv_hwnd,
+                'untitled': len([e for e in gefunden if not e['file']])}
     return gefunden, (mdi_clients[0] if mdi_clients else None), diagnose
 
 
@@ -416,13 +415,13 @@ def list_documents(p):
     """Every open Vectorworks document, and which one commands land in."""
     aktiv = _safe(vs.GetFName, '') or ''
     fenster, _client, diagnose = _dokumentfenster()
-    aktiv_hwnd = diagnose.get('aktiv_hwnd')
+    aktiv_hwnd = diagnose.get('active_hwnd')
 
     for f in fenster:
-        per_name = bool(f['datei']) and _grundname(f['datei']) == _grundname(aktiv)
+        per_name = bool(f['file']) and _grundname(f['file']) == _grundname(aktiv)
         if aktiv_hwnd is not None:
             per_hwnd = (f['hwnd'] == aktiv_hwnd)
-            f['aktiv'] = per_hwnd
+            f['active'] = per_hwnd
             if per_name != per_hwnd:
                 # Namensvergleich und Fenster-Z-Reihenfolge widersprechen sich
                 # — typischer Ausloeser: zwei offene Dateien mit demselben
@@ -430,18 +429,18 @@ def list_documents(p):
                 # stillschweigend eines der beiden Signale zu bevorzugen.
                 f['aktiv_widerspruch'] = True
         else:
-            f['aktiv'] = per_name
+            f['active'] = per_name
 
     if not fenster:
         # Lieber das eine bekannte Dokument melden als eine leere Liste, die
         # aussieht, als waere nichts offen.
-        return {'status': 'ok', 'aktiv': aktiv, 'anzahl': 1 if aktiv else 0,
-                'dokumente': ([{'datei': aktiv, 'aktiv': True, 'hwnd': None}] if aktiv else []),
-                'hinweis': 'Fenster nicht auffindbar — nur das aktive Dokument ist bekannt.',
-                'diagnose': diagnose}
+        return {'status': 'ok', 'active': aktiv, 'count': 1 if aktiv else 0,
+                'documents': ([{'file': aktiv, 'active': True, 'hwnd': None}] if aktiv else []),
+                'hint': 'window not found — only the active document is known.',
+                'diagnostics': diagnose}
 
-    return {'status': 'ok', 'aktiv': aktiv, 'anzahl': len(fenster),
-            'dokumente': fenster, 'diagnose': diagnose}
+    return {'status': 'ok', 'active': aktiv, 'count': len(fenster),
+            'documents': fenster, 'diagnostics': diagnose}
 
 
 def switch_document(p):
@@ -460,22 +459,22 @@ def switch_document(p):
 
     fenster, client, diagnose = _dokumentfenster()
     if not fenster:
-        return {'error': 'Kein Dokumentfenster gefunden.', 'diagnose': diagnose}
+        return {'error': 'No document window found.', 'diagnostics': diagnose}
 
     ziel = None
     if p.get('hwnd'):
         gesucht = int(p['hwnd'])
         ziel = next((f for f in fenster if f['hwnd'] == gesucht), None)
         if not ziel:
-            return {'error': 'Dieses hwnd ist nicht (mehr) offen.',
-                    'offen': [{'hwnd': f['hwnd'], 'datei': f['datei']} for f in fenster]}
+            return {'error': 'This hwnd is not open (any more).',
+                    'open': [{'hwnd': f['hwnd'], 'file': f['file']} for f in fenster]}
     else:
         name = _grundname(p.get('name', ''))
         if not name:
-            return {'error': 'Bitte name oder hwnd angeben.',
-                    'offen': [f['datei'] for f in fenster if f['datei']]}
+            return {'error': 'Pass name or hwnd.',
+                    'open': [f['file'] for f in fenster if f['file']]}
 
-        genau = [f for f in fenster if f['datei'] and _grundname(f['datei']) == name]
+        genau = [f for f in fenster if f['file'] and _grundname(f['file']) == name]
         if len(genau) > 1:
             # Gleicher Basisname, vermutlich verschiedene Ordner. Der
             # Fenstertitel traegt keinen Pfad, und vs.GetFPathName() liefert
@@ -486,70 +485,70 @@ def switch_document(p):
             # des vollen Pfads geprueft) werden kann.
             return {'error': 'Mehrdeutig: mehrere offene Dateien mit diesem '
                               'Basisnamen (evtl. verschiedene Ordner).',
-                    'kandidaten': [{'hwnd': f['hwnd'], 'datei': f['datei'],
-                                     'titel': f['titel']} for f in genau],
-                    'hinweis': 'Mit hwnd erneut aufrufen, oder einzeln '
-                               'wechseln und mit confirm_active_document '
+                    'candidates': [{'hwnd': f['hwnd'], 'file': f['file'],
+                                     'title': f['title']} for f in genau],
+                    'hint': 'Call again with hwnd, or switch them one at a '
+                               'time and confirm with confirm_active_document '
                                '(expected=voller Pfad) pruefen.'}
         ziel = genau[0] if genau else None
 
         if not ziel:   # Teiltreffer, damit "Musterdatei" fuer 260717_Musterdatei.vwx reicht
             treffer = [f for f in fenster
-                       if f['datei'] and _namens_teiltreffer(name, _grundname(f['datei']))]
+                       if f['file'] and _namens_teiltreffer(name, _grundname(f['file']))]
             if len(treffer) > 1:
                 return {'error': 'Mehrdeutig.',
-                        'kandidaten': [{'hwnd': f['hwnd'], 'datei': f['datei'],
-                                         'titel': f['titel']} for f in treffer],
-                        'hinweis': 'Mit hwnd erneut aufrufen.'}
+                        'candidates': [{'hwnd': f['hwnd'], 'file': f['file'],
+                                         'title': f['title']} for f in treffer],
+                        'hint': 'Call again with hwnd.'}
             ziel = treffer[0] if treffer else None
 
     if not ziel:
-        unbenannt = [f for f in fenster if not f['datei']]
-        hinweis = None
-        if unbenannt:
-            hinweis = (f'{len(unbenannt)} Fenster ohne lesbaren Dateinamen '
-                       '(vermutlich maximiert, Titel mit Rahmenfenster '
-                       'verschmolzen) — per hwnd ansprechen, siehe "unbenannt".')
-        return {'error': 'Dieses Dokument ist nicht offen.',
-                'offen': [f['datei'] for f in fenster if f['datei']],
-                'unbenannt': [f['hwnd'] for f in unbenannt],
-                'hinweis': hinweis}
+        untitled_windows = [f for f in fenster if not f['file']]
+        hint = None
+        if untitled_windows:
+            hint = (f'{len(untitled_windows)} window(s) without a readable file '
+                    'name (probably maximized, title merged with the frame) — '
+                    'address them by hwnd, see "untitled".')
+        return {'error': 'This document is not open.',
+                'open': [f['file'] for f in fenster if f['file']],
+                'untitled': [f['hwnd'] for f in untitled_windows],
+                'hint': hint}
 
     vorher = _safe(vs.GetFName, '') or ''
-    aktiv_hwnd = diagnose.get('aktiv_hwnd')
+    aktiv_hwnd = diagnose.get('active_hwnd')
     if aktiv_hwnd is not None:
-        # hwnd/Z-Order ist zuverlaessiger als der Namensvergleich, gerade
+        # hwnd/Z-order is more reliable than comparing names, especially
         # weil zwei gleichnamige Dateien den Namensvergleich sonst fuer
-        # BEIDE Fenster faelschlich "bereits aktiv" melden koennten.
+        # BOTH windows could wrongly report "already active".
         bereits_aktiv = (ziel['hwnd'] == aktiv_hwnd)
     else:
-        bereits_aktiv = bool(ziel['datei']) and _grundname(ziel['datei']) == _grundname(vorher)
+        bereits_aktiv = bool(ziel['file']) and _grundname(ziel['file']) == _grundname(vorher)
 
     if bereits_aktiv:
-        return {'status': 'ok', 'aktiv': vorher, 'gewechselt': False,
-                'hinweis': 'Dieses Dokument ist bereits vorn.'}
+        return {'status': 'ok', 'active': vorher, 'switched': False,
+                'hint': 'This document is already in front.'}
 
     WM_MDIACTIVATE = 0x0222
     SW_RESTORE = 9
-    if client and ziel.get('quelle') in ('mdi', 'mdi-rahmen-titel'):
+    if client and ziel.get('source') in ('mdi', 'mdi-frame-title'):
         u.PostMessageW(client, WM_MDIACTIVATE, ziel['hwnd'], 0)
     else:
         if u.IsIconic(ziel['hwnd']):
             u.ShowWindow(ziel['hwnd'], SW_RESTORE)
         u.SetForegroundWindow(ziel['hwnd'])
 
-    return {'status': 'angestossen', 'ziel': ziel['datei'] or f"hwnd:{ziel['hwnd']}",
-            'ziel_hwnd': ziel['hwnd'], 'vorher': vorher,
-            'geraten': bool(ziel.get('geraten')),
-            'hinweis': 'Der Wechsel greift, sobald dieses Skript zurueck ist. '
-                       'Mit confirm_active_document bestaetigen — diese '
-                       'Antwort belegt ihn nicht.'}
+    return {'status': 'requested', 'target': ziel['file'] or f"hwnd:{ziel['hwnd']}",
+            'target_hwnd': ziel['hwnd'], 'previous': vorher,
+            'guessed': bool(ziel.get('guessed')),
+            'hint': 'The switch takes effect once this script returns. '
+                       'Confirm with confirm_active_document — this reply '
+                       'does not prove it.'}
 
 
 def _hold(p):
     """Pin the (already activated) document to the front for a screenshot.
     The pump records the hold; this only reports where we are."""
-    return {'status': 'ok', 'dokument': _safe(vs.GetFName, '') or ''}
+    return {'status': 'ok', 'document': _safe(vs.GetFName, '') or ''}
 
 
 def _release(p):
@@ -585,9 +584,9 @@ def close_document(p):
         return {'error': 'Schliessen gibt es nur unter Windows.'}
     u, _pid, _ctypes, _wt = teile
     fenster, _client, diagnose = _dokumentfenster()
-    aktiv_hwnd = diagnose.get('aktiv_hwnd')
+    aktiv_hwnd = diagnose.get('active_hwnd')
     if not aktiv_hwnd:
-        return {'error': 'aktives Dokumentfenster nicht gefunden', 'diagnose': diagnose}
+        return {'error': 'active document window not found', 'diagnostics': diagnose}
     if save:
         # NOT DoMenuTextByName('Save'): like every menu command it is queued
         # and runs after this script — i.e. after the WM_CLOSE below, so
@@ -596,17 +595,17 @@ def close_document(p):
         # without dialogs, and reports success.
         rc = _safe(lambda: vs.SaveActiveDocument(path), None)
         if rc not in (0, True, None):
-            return {'error': 'Speichern fehlgeschlagen (rc=%r) — nicht geschlossen.' % (rc,),
+            return {'error': 'Save failed (rc=%r) — not closed.' % (rc,),
                     'code': 'DOC_SAVE_FAILED'}
         if rc is None:
-            return {'error': 'SaveActiveDocument nicht ausfuehrbar — nicht geschlossen, '
-                             'damit kein Sichern-Dialog die Bridge blockiert.',
+            return {'error': 'SaveActiveDocument not runnable — not closed, so no save '
+                             'dialog can block the bridge.',
                     'code': 'DOC_SAVE_FAILED'}
     WM_CLOSE = 0x0010
     u.PostMessageW(aktiv_hwnd, WM_CLOSE, 0, 0)
-    return {'status': 'angestossen', 'dokument': name, 'gespeichert': bool(save),
-            'hinweis': 'Das Fenster schliesst, sobald dieses Skript zurueck ist; '
-                       'list_documents bestaetigt es.'}
+    return {'status': 'requested', 'document': name, 'saved': bool(save),
+            'hint': 'The window closes once this script returns; '
+                       'list_documents confirms it.'}
 
 
 # ── Layers ──────────────────────────────────────────────────────────────────
@@ -2945,7 +2944,9 @@ def get_walls(p):
 # ── Landscape / Plants ──────────────────────────────────────────────────────
 
 def get_plants(p):
-    """Get all plant objects with parametric record data (Botanischer Name, Höhe, etc.)."""
+    """Get all plant objects with parametric record data (the German record
+    fields 'Botanischer Name', 'Höhe', ... on a German install).
+    """
     parts = ['T=PLUGINOBJ']
     if p.get('layer'): parts.append(f"L='{p['layer']}'")
     hs = _collect(' & '.join(parts), p.get('limit', 500))
@@ -3720,11 +3721,11 @@ def create_pio_from_path(p):
         _restore(prev)
 
 
-# ── Gelände: Gefälle-Grundriss (Grade CW) und Höhenpunkte (Stake Object) ────
+# ── Terrain: Grade objects and stake objects ─────────────────────────────
 # Feldnamen am 10.10.2026 an handgesetzten Objekten (VW2026 DE) ausgelesen.
 # „Höhe Punkt 1/2" heißen intern ohne Umlaut („Hhe Punkt 1"), Werte stehen mit
 # deutschem Dezimalkomma im Record. Grade CW ist ein Pfad-PIO mit 2 Punkten;
-# Einfügepunkt = Punkt 1, Pfad lokal. Endpunkte, die sich treffen, verbindet
+# Insertion point = point 1, path local. Endpoints that meet get joined
 # VW selbst zu einem Gefällenetz.
 
 _GRADE = 'Grade CW'
@@ -3732,8 +3733,9 @@ _STAKE = 'Stake Object'
 
 
 def _fld(h, rec, *needles):
-    """Feldname im Parametric Record über Teilstrings finden (robust gegen
-    Umlaut-Verlust in internen Namen)."""
+    """Find a field name in a parametric record by substring (robust against
+    umlaut loss in the internal names).
+    """
     r = vs.GetParametricRecord(h)
     for i in range(1, vs.NumFields(r) + 1):
         n = vs.GetFldName(r, i)
@@ -3759,10 +3761,11 @@ def _new_on_layer(layer, pio, before):
 
 
 def _grade_template(opts, layer):
-    """Vorlage-Grade finden: params template (UUID) oder erstes Grade CW auf
-    der Zielebene. Per CreateCustomObjectPath erzeugte Grades bleiben
-    uninitialisiert (ControlPoints 0, Pfeil als Stummel bei −10/−10, Länge 0,
-    kein Symbol) — nur ein mit dem Werkzeug gesetztes Grade zeichnet richtig."""
+    """Find a template Grade: params template (UUID) or the first Grade object on
+    the target layer. A Grade made by CreateCustomObjectPath stays uninitialised
+    (control points 0, arrow as a stub at -10/-10, length 0, no symbol) — only a
+    Grade placed with the tool draws correctly.
+    """
     if opts.get('template'):
         return _h(opts['template'])
     found = []
@@ -3819,16 +3822,18 @@ def _grade_finish_pending():
 
 
 def grade_finish(p=None):
-    """Nach create_grade / convert_3dpoly_to_grades aufrufen (eigener Aufruf):
-    setzt die mitkopierten Höhenstempel an die neuen Endpunkte."""
+    """Call after create_grade / convert_3dpoly_to_grades (separate call):
+    moves the copied height tags to the new end points."""
     moved, left = _grade_finish_pending()
     return {'status': 'ok', 'moved': moved, 'pending': left}
 
 
 def _grade_shape(h, wx, wy, rz, z1, z2):
-    """Pfad, ControlPoints, Höhen und Neigungsfelder eines Grade CW setzen.
-    (wx, wy) = Vektor Punkt 1 → Punkt 2 im Rahmen des Containers; rz = Drehung
-    des Grade-Objekts darin. Pfad/ControlPoints sind objekt-lokal (Ursprung = Punkt 1)."""
+    """Set path, control points, heights and slope fields of a Grade object.
+    (wx, wy) = vector point 1 -> point 2 in the container's frame; rz = rotation
+    of the grade object inside it. Path/control points are object-local
+    (origin = point 1).
+    """
     a = math.radians(-rz)
     dx = wx * math.cos(a) - wy * math.sin(a)
     dy = wx * math.sin(a) + wy * math.cos(a)
@@ -3867,8 +3872,8 @@ def _grade_one(x1, y1, z1, x2, y2, z2, opts):
     layer = vs.GetLName(vs.ActLayer())
     src = _grade_template(opts, layer)
     if not src:
-        return {'error': 'Keine Vorlage: bitte ein Gefälle-Grundriss mit dem Werkzeug auf '
-                         'Ebene „%s" setzen (oder template=<UUID>)' % layer}
+        return {'error': 'No template: place a Grade object with the tool on layer '
+                         '"%s" (or pass template=<UUID>)' % layer}
     sp = vs.GetCustomObjectPath(src)
     s_end = vs.GetPolyPt(sp, vs.GetVertNum(sp))
     O = vs.GetOrigin()
@@ -3905,13 +3910,14 @@ def _grade_one(x1, y1, z1, x2, y2, z2, opts):
 
 
 def create_grade(p):
-    """Gefälle-Grundriss (Grade CW) zwischen zwei Punkten anlegen.
-    Braucht eine Vorlage: ein mit dem Werkzeug gesetztes Grade auf der
-    Zielebene (oder template=<UUID>) — es wird dupliziert und umgesetzt.
-    params: x1,y1,z1,x2,y2,z2 (Dokumentkoordinaten wie Lineal), layer, class,
-    modifier (True = „Als Modifikator verwenden"), model ('Proposed'/'Existing'),
+    """Create a Grade object between two points.
+    Needs a template: a Grade placed with the tool on the target layer (or
+    template=<UUID>) — it is duplicated and moved into place.
+    params: x1,y1,z1,x2,y2,z2 (document coordinates like the ruler), layer, class,
+    modifier (True = "Use as modifier"), model ('Proposed'/'Existing'),
     label_slope (True), label_heights (False), template (UUID).
-    Danach grade_finish in EIGENEM Aufruf (Höhenstempel ans Ende setzen)."""
+    Then call grade_finish in a SEPARATE call (moves the height tag to the end).
+    """
     _grade_finish_pending()
     prev = _with_layer_class(p)
     try:
@@ -3927,9 +3933,10 @@ def create_grade(p):
 
 
 def create_stake(p):
-    """Höhenpunkt (Stake Object) setzen. params: x,y,z, layer, class,
-    mode ('modifier' = Geländemodifikator, 'data' = Geländemodelldaten,
-    '2d' = nur Darstellung), model ('Proposed'/'Existing')."""
+    """Place a stake object. params: x,y,z, layer, class,
+    mode ('modifier' = site modifier, 'data' = site model data,
+    '2d' = display only), model ('Proposed'/'Existing').
+    """
     prev = _with_layer_class(p)
     try:
         layer = vs.GetLName(vs.ActLayer())
@@ -3938,7 +3945,7 @@ def create_stake(p):
         vs.CreateCustomObjectN(_STAKE, (float(p['x']), float(p['y'])), 0, False)
         u = _new_on_layer(layer, _STAKE, before)
         if not u:
-            return {'error': 'Stake nicht eindeutig gefunden'}
+            return {'error': 'Stake not uniquely found'}
         h = vs.GetObjectByUuid(u)
         mode = {'modifier': 'Site modifier object', 'data': 'Site model data',
                 '2d': '2D/3D graphics only'}.get(p.get('mode', 'modifier'), p.get('mode'))
@@ -3958,20 +3965,21 @@ def create_stake(p):
 
 
 def convert_3dpoly_to_grades(p):
-    """3D-Polygon (GM-Modifikator) in Gefälle-Grundriss umwandeln: je Kante ein
-    Grade CW mit den z-Werten der Eckpunkte. params: object_id (3D-Polygon),
-    layer/class für die Grades (Default: Ebene des Polygons), closed (auto),
-    min_length (0.05 m; kürzere Kanten überspringen), skip_flat (False:
-    Kanten ohne Höhenunterschied trotzdem anlegen), modifier, label_slope,
-    label_heights, template. Das Polygon selbst bleibt unverändert.
-    Danach grade_finish in EIGENEM Aufruf (Höhenstempel ans Ende setzen)."""
+    """Turn a 3D polygon (site modifier) into Grade objects: one per edge, with the
+    z values of its end points. params: object_id (3D polygon),
+    layer/class for the grades (default: the polygon's layer), closed (auto),
+    min_length (0.05 m; shorter edges are skipped), skip_flat (False: create
+    edges without a height difference anyway), modifier, label_slope,
+    label_heights, template. The polygon itself is left unchanged.
+    Then call grade_finish in a SEPARATE call (moves the height tag to the end).
+    """
     _grade_finish_pending()
     src = _h(p.get('object_id'))
-    if not src: return {'error': 'Objekt nicht gefunden'}
-    if vs.GetTypeN(src) != 25: return {'error': 'kein 3D-Polygon (Typ %d)' % vs.GetTypeN(src)}
+    if not src: return {'error': 'Object not found'}
+    if vs.GetTypeN(src) != 25: return {'error': 'not a 3D polygon (type %d)' % vs.GetTypeN(src)}
     belag = _h(p['hardscape']) if p.get('hardscape') else None
     if p.get('hardscape') and not belag:
-        return {'error': 'Belag nicht gefunden'}
+        return {'error': 'Hardscape not found'}
     q = dict(p)
     q.setdefault('layer', vs.GetLName(vs.GetLayer(src)))
     prev = _with_layer_class(q)
@@ -4036,9 +4044,10 @@ def _children(h):
 
 
 def _belag_container(h):
-    """Modifikatoren-Gruppe des Belags oder None. Ein Belag ohne Modifikatoren
-    hat genau eine Untergruppe (Konturpolylinie); mit Modifikatoren steht davor
-    eine weitere Gruppe aus Plug-in-Objekten (Grades, Stakes, Datenstempel)."""
+    """The hardscape's modifier group, or None. A hardscape without modifiers has
+    exactly one subgroup (the outline polyline); with modifiers another group of
+    plug-in objects (grades, stakes, data tags) sits in front of it.
+    """
     groups = [c for c in _children(h) if vs.GetTypeN(c) == 11]
     if len(groups) < 2:
         return None
@@ -4072,19 +4081,19 @@ def _belag_refit(h):
 def _belag_grade(h, x1, y1, z1, x2, y2, z2, opts):
     cont = _belag_container(h)
     if not cont:
-        return {'error': 'Belag hat noch keine Modifikatoren-Gruppe — einmal '
-                         'hardscape_open_modifiers (Server-Werkzeug) ausführen'}
+        return {'error': 'The hardscape has no modifier group yet — run '
+                         'hardscape_open_modifiers (server tool) once'}
     src = _h(opts['template']) if opts.get('template') else None
     if not src:
         inner = [k for k in _children(cont) if vs.GetTypeN(k) == 86
                  and vs.GetName(vs.GetParametricRecord(k)) == _GRADE]
         src = inner[0] if inner else _grade_template(opts, vs.GetLName(vs.GetLayer(h)))
     if not src:
-        return {'error': 'Keine Grade-Vorlage: template=<UUID> eines Gefälle-Grundrisses angeben'}
+        return {'error': 'No grade template: pass template=<UUID> of a Grade object'}
     vorher = {vs.GetObjectUuid(k) for k in _children(cont)}
     g = vs.CreateDuplicateObject(src, cont)
     if not g:
-        return {'error': 'Grade konnte nicht in den Belag kopiert werden'}
+        return {'error': 'The grade could not be copied into the hardscape'}
     # Die Höhenstempel der Vorlage reisen mit, behalten aber deren Lage — weit
     # außerhalb des Belags (Bbox und „Zoom auf Objekte" laufen dann ins Leere)
     for k in _children(cont):
@@ -4106,11 +4115,12 @@ def _belag_grade(h, x1, y1, z1, x2, y2, z2, opts):
 
 
 def hardscape_modifier_info(p):
-    """Zustand eines Belags für Oberflächenmodifikatoren. params: object_id.
-    Liefert angepasst (Mode 3D = 7), ob die Modifikatoren-Gruppe existiert und
-    welche Modifikatoren darin liegen (Grade: Weltkoordinaten der Endpunkte)."""
+    """State of a hardscape for surface modifiers. params: object_id.
+    Returns aligned (Mode 3D = 7), whether the modifier group exists, and which
+    modifiers are in it (grades: world coordinates of their end points).
+    """
     h = _h(p.get('object_id'))
-    if not h: return {'error': 'Belag nicht gefunden'}
+    if not h: return {'error': 'Hardscape not found'}
     cont = _belag_container(h)
     mods = []
     if cont:
@@ -4140,11 +4150,11 @@ def hardscape_modifier_info(p):
 
 
 def hardscape_prepare_modifiers(p):
-    """Belag für hardscape_open_modifiers vorbereiten: auf „Angepasst" stellen
-    (set_aligned, Default True), allein auswählen, Ansicht darauf zoomen.
+    """Prepare a hardscape for hardscape_open_modifiers: set it to "Aligned"
+    (set_aligned, default True), select it alone, zoom the view onto it.
     params: object_id, set_aligned."""
     h = _h(p.get('object_id'))
-    if not h: return {'error': 'Belag nicht gefunden'}
+    if not h: return {'error': 'Hardscape not found'}
     if p.get('set_aligned', True) and not _belag_angepasst(h):
         # „Angepasst" im Dialog setzt drei Felder; Mode 3D allein reicht nicht
         # (Kontextmenüeintrag fehlt dann, verifiziert 10.10.2026)
@@ -4165,17 +4175,18 @@ def hardscape_prepare_modifiers(p):
 
 
 def hardscape_add_grade(p):
-    """Gefälle-Grundriss als Oberflächenmodifikator IN einen angepassten Belag
-    legen (wirkt ohne Geländemodell). params: object_id (Belag),
-    x1,y1,z1,x2,y2,z2 in Dokumentkoordinaten wie Lineal/HCenter (werden in den
-    belag-lokalen Rahmen umgerechnet; Höhen absolut), template (Grade-UUID,
-    sonst erstes Grade im Belag bzw. auf seiner Ebene), refit (True: Belag neu
-    berechnen). Voraussetzung: Modifikatoren-Gruppe vorhanden (einmal
-    hardscape_open_modifiers)."""
+    """Place a Grade object as a surface modifier INSIDE an aligned hardscape
+    (works without a site model). params: object_id (hardscape),
+    x1,y1,z1,x2,y2,z2 in document coordinates like ruler/HCenter (converted into
+    the hardscape-local frame; heights absolute), template (grade UUID, else the
+    first grade in the hardscape or on its layer), refit (True: recompute the
+    hardscape). Prerequisite: the modifier group exists (run
+    hardscape_open_modifiers once).
+    """
     h = _h(p.get('object_id'))
-    if not h: return {'error': 'Belag nicht gefunden'}
+    if not h: return {'error': 'Hardscape not found'}
     if not _belag_angepasst(h):
-        return {'error': 'Belag ist nicht „Angepasst" — hardscape_prepare_modifiers'}
+        return {'error': 'Hardscape is not "Aligned" — hardscape_prepare_modifiers'}
     try:
         r = _belag_grade(h, float(p['x1']), float(p['y1']), float(p['z1']),
                          float(p['x2']), float(p['y2']), float(p['z2']), p)
@@ -4189,10 +4200,12 @@ def hardscape_add_grade(p):
 
 
 def _belag_faces(h):
-    """Dreiecke/Vierecke der Belagsoberfläche in Weltkoordinaten. Das Mesh im
-    Belag liegt im Rohrahmen (Welt = Versatz + R(rz)·(v + Ursprung)); eine
-    Kopie wird per MeshToGroup in 3D-Polygone zerlegt und wieder gelöscht.
-    (GetZatXY am Belag trifft nur zufällig — meist 0 —, nicht verwenden.)"""
+    """Triangles/quads of the hardscape surface in world coordinates. The mesh
+    inside the hardscape lives in the raw frame (world = offset + R(rz)*(v +
+    origin)); a copy is exploded into 3D polygons with MeshToGroup and deleted
+    again. (GetZatXY on the hardscape only hits by accident — usually 0 — do not
+    use it.)
+    """
     ok, off, _, _, rz = vs.GetEntityMatrix(h)
     O = vs.GetOrigin(); a = math.radians(rz); ca, sa = math.cos(a), math.sin(a)
     faces = []
@@ -4222,7 +4235,8 @@ def _belag_faces(h):
 
 
 def _z_in_face(f, x, y):
-    """z im (fächertriangulierten) Polygon f, sonst None."""
+    """z inside the (fan-triangulated) polygon f, else None.
+    """
     for i in range(1, len(f) - 1):
         (x1, y1, z1), (x2, y2, z2), (x3, y3, z3) = f[0], f[i], f[i + 1]
         det = (y2 - y3) * (x1 - x3) + (x3 - x2) * (y1 - y3)
@@ -4236,10 +4250,11 @@ def _z_in_face(f, x, y):
 
 
 def hardscape_sample_z(p):
-    """Belagsoberfläche (Oberseite) abtasten. params: object_id, points
-    [[x,y],…] in Dokumentkoordinaten. Rückgabe z je Punkt (None = außerhalb)."""
+    """Sample the hardscape surface (top side). params: object_id, points
+    [[x,y],...] in document coordinates. Returns z per point (None = outside).
+    """
     h = _h(p.get('object_id'))
-    if not h: return {'error': 'Belag nicht gefunden'}
+    if not h: return {'error': 'Hardscape not found'}
     faces = _belag_faces(h)
     out = []
     for x, y in p.get('points', []):
@@ -5500,7 +5515,7 @@ def marionette_set_node_param(p):
 def marionette_set_wrapper_param(p):
     """Set a LIFTED param on a Marionette wrapper AND sync the matching inner
     input node (matched by OIP label text == node name). params: object_id
-    (wrapper UUID), name (OIP label, e.g. '2 Hoehe Stütze') or var_name
+    (wrapper UUID), name (OIP label, e.g. '2 Hoehe Stütze' in a German doc) or var_name
     (e.g. 'Hoehe_St_tze_50_Lifted'), value."""
     import json as _json
     w, err = _mrn_find_wrapper(p)
@@ -5580,7 +5595,7 @@ def marionette_duplicate(p):
 # Verified on VW2026 (2026-07-06):
 #   * Resource names are GLOBAL and shared with object names — a style cannot
 #     have the same name as a drawing object ("naming hiccups"), and two
-#     folders cannot both be called 'außen'.
+#     folders cannot both be called 'außen' (a real German object name).
 #   * Symbol folders = type 92, symbol defs / plugin styles = type 16.
 #   * vs.SetParent(resource, folderHandle) MOVES resources between folders
 #     (returns True) — this is the reliable way; vs.InsertSymbolInFolder was a
@@ -5722,7 +5737,7 @@ def resource_delete(p):
 def resource_create_folder(p):
     """Try to create a symbol folder by script. UNRELIABLE on VW2026 (see block
     header) — probes BeginFolder/BeginFolderN and verifies via FSymDef diff.
-    If it fails, create the folder once in the Zubehör-Manager GUI and use
+    If it fails, create the folder once in the Resource Manager GUI and use
     resource_move / resource_rename. params: name, parent (optional folder)."""
     name = p.get('name')
     if not name: return {'error': 'name required'}
@@ -5754,9 +5769,7 @@ def resource_create_folder(p):
                         vs.SetParent(h, tgt)
                 return {'status': 'ok', 'object_id': _oid(h)}
             vs.DelObject(h)
-    return {'error': 'folder creation failed (known VW2026 limitation) — '
-                     'create it once in the Zubehör-Manager GUI, then use '
-                     'resource_move/resource_rename'}
+    return {'error': 'folder creation failed (known VW2026 limitation) — create it once in the Resource Manager GUI, then use resource_move/resource_rename'}
 
 def marionette_style_clone(p):
     """Clone a Marionette object style and set its parameters — the proven bulk
@@ -7205,7 +7218,7 @@ def confirm_active_document(p):
     """
     expected = (p.get('expected') or p.get('name') or '').strip()
     if not expected:
-        return {'error': 'Bitte expected (Dateiname oder voller Pfad) angeben.'}
+        return {'error': 'Pass expected (file name or full path).'}
 
     aktiv = _safe(vs.GetFName, '') or ''
     pfad = _safe(vs.GetFPathName, '') or ''
@@ -7256,13 +7269,13 @@ def confirm_active_document(p):
     else:
         stimmt = treffer_name
 
-    return {'status': 'ok', 'stimmt': stimmt, 'expected': expected,
-            'aktiv': aktiv, 'aktiv_pfad': pfad or None,
-            'treffer_name': treffer_name, 'treffer_pfad': treffer_pfad,
-            'hinweis': ('Aktives Dokument passt.' if stimmt else
+    return {'status': 'ok', 'matches': stimmt, 'expected': expected,
+            'active': aktiv, 'active_path': pfad or None,
+            'name_matches': treffer_name, 'path_matches': treffer_pfad,
+            'hint': ('Aktives Dokument passt.' if stimmt else
                         'Aktives Dokument passt NICHT zu "expected" — der '
-                        'Wechsel ist vermutlich noch nicht angekommen, oder '
-                        'es wurde das falsche Fenster getroffen.')}
+                        'The switch has probably not landed yet, or the wrong '
+                        'window was hit.')}
 
 
 # ── Zubehör v2: resource lists, native import/duplicate, style relink, nesting guard ──
@@ -7532,8 +7545,9 @@ def _erdbau_shoelace(pts):
 
 
 def _erdbau_pip(x, y, poly):
-    """Ray casting. Eigene Implementierung, weil vs.PtInPoly bei Polygonen
-    mit Loch nicht verlaesslich ist."""
+    """Ray casting. Own implementation, because vs.PtInPoly is not reliable on
+    polygons with a hole.
+    """
     inside = False
     n = len(poly)
     j = n - 1
@@ -7593,14 +7607,15 @@ def _erdbau_parse_m3(s):
 
 
 def erdbau_bilanz(p):
-    """TG-Anteil im Auftrag rechnen und in LL-Erdbau schreiben.
-
+    """Compute the underground share of the cut and write it into the LL-Erdbau
+    record.
+    
     params:
-      site_model_uuid  UUID des Gelaendemodells (Pflicht)
-      cell             Rasterweite in m, Vorgabe 2.0 (2.0 -> ca. 0,2 % Flaechenfehler)
-      tg_layer         Ebene der TG-Symbole, Vorgabe 'CGA_TG'
-      bodies           optional: [[uuid, name, z_uk, z_ok, [[x0,y0],[x1,y1]]], ...]
-      write            Vorgabe True; False = nur rechnen, nichts schreiben
+      site_model_uuid  site model UUID (required)
+      cell             grid size in m, default 2.0 (2.0 -> about 0.2 % area error)
+      tg_layer         layer of the UG symbols, default 'CGA_TG'
+      bodies           optional: [[uuid, name, z_bottom, z_top, [[x0,y0],[x1,y1]]], ...]
+      write            default True; False = compute only, write nothing
     """
     import time
     smu = p.get('site_model_uuid')
@@ -7608,7 +7623,7 @@ def erdbau_bilanz(p):
         return {'error': 'site_model_uuid fehlt'}
     sm = vs.GetObjectByUuid(smu)
     if not sm:
-        return {'error': 'Gelaendemodell nicht gefunden'}
+        return {'error': 'Site model not found'}
     cell = float(p.get('cell', 2.0))
     A = cell * cell
     bodies = p.get('bodies') or _ERDBAU_BODIES_DEFAULT
@@ -7619,7 +7634,7 @@ def erdbau_bilanz(p):
         uuid, tag, z_lo, z_deck, wbb = b[0], b[1], float(b[2]), float(b[3]), b[4]
         poly, band, ok = _erdbau_contour(uuid, wbb)
         if not poly or not ok:
-            out.append({'sym': tag, 'error': 'Transformation nicht plausibel'})
+            out.append({'sym': tag, 'error': 'transformation not plausible'})
             continue
         area = _erdbau_shoelace(poly)
         x0 = min(q[0] for q in poly); x1 = max(q[0] for q in poly)
@@ -7709,8 +7724,8 @@ def erdbau_bilanz(p):
             vs.SetRField(sm, _ERDBAU_REC, 'Aushub_gesamt',
                          '%.3f' % (cut + tot['unter']))
         else:
-            res['note'] = ('Fill Volume nicht gerechnet - erst '
-                           '"Auftrag/Abtrag aktualisieren" am Gelaendemodell')
+            res['note'] = ('Fill Volume not computed — run "Update Cut and Fill" on '
+                           'the site model first')
         res['written'] = {f[0]: vs.GetRField(sm, _ERDBAU_REC, f[0])
                           for f in _ERDBAU_FIELDS}
     return res
@@ -7720,9 +7735,9 @@ def erdbau_read(p):
     """Aktuelle LL-Erdbau-Werte am Gelaendemodell lesen. params: site_model_uuid."""
     sm = vs.GetObjectByUuid(p.get('site_model_uuid', ''))
     if not sm:
-        return {'error': 'Gelaendemodell nicht gefunden'}
+        return {'error': 'Site model not found'}
     if not vs.GetObject(_ERDBAU_REC):
-        return {'error': 'Datensatz %s existiert nicht' % _ERDBAU_REC}
+        return {'error': 'record %s does not exist' % _ERDBAU_REC}
     return {'status': 'ok',
             'values': {f[0]: vs.GetRField(sm, _ERDBAU_REC, f[0])
                        for f in _ERDBAU_FIELDS},
@@ -7731,9 +7746,10 @@ def erdbau_read(p):
 
 
 def erdbau_tg_probe(p):
-    """Diagnose ohne Schreiben: Grundrissflaeche, Bandprobe (Umfang x 0,30
-    gegen die Netto-Polygonflaeche) und Hoehenstufen je TG-Koerper.
-    params: tg_layer (Vorgabe 'CGA_TG'), bodies (optional)."""
+    """Diagnostic without writing: footprint area, strip check (perimeter x 0.30
+    against the net polygon area) and height steps per UG body.
+    params: tg_layer (default 'CGA_TG'), bodies (optional).
+    """
     import math
     bodies = p.get('bodies') or _ERDBAU_BODIES_DEFAULT
     out = []

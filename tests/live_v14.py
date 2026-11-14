@@ -51,9 +51,9 @@ class Agent:
 
 a, b = Agent("agent-A"), Agent("agent-B")
 docs = a.call("list_documents")
-print("open:", [d["datei"] for d in docs["dokumente"]], "| front:", docs["aktiv"])
-front = docs["aktiv"]
-other = next(d["datei"] for d in docs["dokumente"] if d["datei"] and d["datei"] != front)
+print("open:", [d["file"] for d in docs["documents"]], "| front:", docs["active"])
+front = docs["active"]
+other = next(d["file"] for d in docs["documents"] if d["file"] and d["file"] != front)
 print("agent-B binds to", other, "->", b.call("use_document", document=other, priority="batch"))
 
 t = time.time()
@@ -64,9 +64,9 @@ print("agent-A get_document_info -> %s" % ra.get("name"))
 rb2 = b.call("vwx", command="get_layers")
 print("agent-B get_layers in %s: %s layers" % (other, len(rb2.get("layers", rb2) if isinstance(rb2, dict) else rb2)))
 for _ in range(20):  # restore comes after the idle delay (VWX_RESTORE_DELAY_S)
-    if a.call("list_documents")["aktiv"] == front: break
+    if a.call("list_documents")["active"] == front: break
     time.sleep(0.5)
-fin = a.call("list_documents")["aktiv"]
+fin = a.call("list_documents")["active"]
 print("front at the end:", fin)
 print("locks: B locks", other, b.call("lock_document", document=other, minutes=1, reason="live test"))
 print("unlock:", b.call("unlock_document", document=other))

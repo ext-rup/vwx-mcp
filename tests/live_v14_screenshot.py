@@ -30,14 +30,14 @@ def shot(agent, name, **args):
 
 a, b = Agent("shot-A"), Agent("shot-B")
 docs = a.call("list_documents")
-front = docs["aktiv"]
-other = next(d["datei"] for d in docs["dokumente"] if d["datei"] and d["datei"] != front)
+front = docs["active"]
+other = next(d["file"] for d in docs["documents"] if d["file"] and d["file"] != front)
 b.call("use_document", document=other)
 t = time.time()
 print("B screenshot of", other, "->", shot(b, "shot_B_bound"), "%.1fs" % (time.time() - t))
 print("A screenshot (front) ->", shot(a, "shot_A_front"))
 for _ in range(20):
-    if a.call("list_documents")["aktiv"] == front:
+    if a.call("list_documents")["active"] == front:
         break
     time.sleep(0.5)
-print("front at end:", a.call("list_documents")["aktiv"])
+print("front at end:", a.call("list_documents")["active"])

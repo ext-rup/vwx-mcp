@@ -278,17 +278,17 @@ class VwxFileTransport:
                         logger.warning(f"tool={command_type} cid={cid} "
                                        f"status=modal dialog={dlg[0]['title']!r}")
                         return {
-                            'error': "Vectorworks zeigt einen modalen Dialog und "
-                                     "blockiert damit die Bridge: "
-                                     + " | ".join(f"{d['title']}: {d['text'] or '(Text nicht lesbar – screenshot)'}"
-                                                  f" [Knöpfe: {', '.join(d['buttons']) or '-'}]" for d in dlg),
+                            'error': "Vectorworks is showing a modal dialog and "
+                                     "is blocking the bridge: "
+                                     + " | ".join(f"{d['title']}: {d['text'] or '(text not readable - use screenshot)'}"
+                                                  f" [buttons: {', '.join(d['buttons']) or '-'}]" for d in dlg),
                             'code': 'VW_MODAL_DIALOG', 'dialogs': dlg, 'cid': cid,
-                            'job': ('läuft (nach dem Schließen mit poll/cid abholen, '
-                                    'NICHT wiederholen)' if claimed else
-                                    'nicht gestartet (verworfen, Wiederholen ist sicher)'),
-                            'hint': "Text lesen, dann vw_dialog_press(button=...) — "
-                                    "nur harmlose Antworten (OK/Nein/Abbrechen) selbst "
-                                    "geben, alles Folgenreiche den Nutzer fragen."}
+                            'job': ('running (fetch it with poll/cid after the '
+                                    'dialog closes, do NOT retry)' if claimed else
+                                    'not started (discarded, retrying is safe)'),
+                            'hint': "Read the text, then answer with vw_dialog_press(button=...) — "
+                                    "answer harmless notices (OK/No/Cancel) yourself, "
+                                    "ask the user about anything consequential."}
                 else:
                     modal_since = None
             # Fail fast on a bridge that is not running rather than burning the
@@ -529,7 +529,7 @@ def get_vwx_connection():
 VWX_DENY_ROOTS = [r.strip() for r in os.environ.get(
     "VWX_DENY_ROOTS", "Y:\\;\\\\").split(";") if r.strip()]
 _PATH_KEYS = ("path", "file_path", "filepath", "out_path", "output", "output_path",
-              "folder", "dir", "pfad", "ziel", "target_path", "export_path")
+              "folder", "dir", "pfad", "target", "target_path", "export_path")
 _WRITE_PATH_PREFIXES = ("export_", "save_document_as", "write_", "resource_export")
 _PRIO = {"interactive": 5, "batch": 8, "background": 9, "urgent": 1}
 
@@ -667,8 +667,8 @@ def cmd(command_type, params=None, document=None):
     Compact separators, not indent=2. Every tool returns through here, so the
     indentation was paid on every result of every call — measured at 13-22% of
     the payload depending on nesting depth. ensure_ascii=False keeps German
-    layer, class and plant names (Winkelstützen, Grünfläche) as real characters
-    instead of \\uXXXX escapes, which is both shorter and readable.
+    layer, class and plant names ("Winkelstützen", "Grünfläche") as real
+    characters instead of \\uXXXX escapes, which is both shorter and readable.
 
     document: target document for this one call (base name or full path);
     overrides the session binding from use_document.
@@ -960,7 +960,7 @@ def _open_docs():
 
 def _doc_open(docs, document):
     key = _doc_key(document)
-    return any(_doc_key(d.get("datei")) == key for d in (docs or {}).get("dokumente", []))
+    return any(_doc_key(d.get("file")) == key for d in (docs or {}).get("documents", []))
 
 
 @vtool
@@ -988,7 +988,7 @@ def use_document(ctx: Context, document: Optional[str] = None,
         if not _doc_open(docs, document):
             return json.dumps({"error": f"{document} is not open in Vectorworks",
                                "code": "DOC_NOT_OPEN",
-                               "offen": [d.get("datei") for d in docs.get("dokumente", [])],
+                               "open": [d.get("file") for d in docs.get("documents", [])],
                                "hint": "open it with open_document(path) first"},
                               ensure_ascii=False)
     with _coord_lock:
@@ -1108,7 +1108,7 @@ def open_document(ctx: Context, path: str, wait_s: float = 180) -> str:
     if docs and _doc_open(docs, path):
         return json.dumps({"status": "ok", "document": os.path.basename(path),
                            "note": "already open"}, ensure_ascii=False)
-    before = (docs or {}).get("aktiv")
+    before = (docs or {}).get("active")
     try:
         os.startfile(path)          # the shell hands it to the running VW instance
     except Exception as e:
@@ -1733,7 +1733,11 @@ def get_walls(ctx: Context, layer: str = None) -> str:
 
 @vtool
 def get_plants(ctx: Context, layer: str = None, limit: int = 500) -> str:
-    """Get all plant objects with parametric record data (Botanischer Name, Höhe, etc.)"""
+    """Get all plant objects with their parametric record data.
+
+    On a German install the record fields are German ('Botanischer Name',
+    'Höhe', ...); the field names come back exactly as the document has them.
+    """
     p = {"limit": limit}
     if layer: p["layer"] = layer
     return cmd("get_plants", p)
@@ -3037,7 +3041,7 @@ def _dialog_details(hwnd, title):
     """What a modal dialog says and which buttons it offers.
 
     Standard Win32 dialogs (#32770 — the warning/question boxes VW raises,
-    e.g. "Die ausgewählte Einfassung ist mit einem Belag/Weg verknüpft …")
+    e.g. "The selected border is linked to a hardscape ...")
     expose their message as Static children and their choices as Button
     children, so both can be read without touching the dialog. Custom-drawn
     dialogs have no readable children; then only the title is known and the
@@ -3351,11 +3355,11 @@ def vw_dialog_press(ctx: Context, button: str, title: Optional[str] = None) -> s
     """ANSWER a Vectorworks modal dialog by pressing one of its buttons.
 
     button: the button label as vw_dialog lists it (case-insensitive, '&'
-    ignored), e.g. "OK", "Nein", "Abbrechen". Special value "close" sends
+    ignored), e.g. "OK", "No", "Cancel". Special value "close" sends
     WM_CLOSE (like the X) for dialogs without readable buttons.
     title: pick the dialog by (part of) its title when several are open.
     Read the text first. Answer harmless notices yourself (OK on a warning,
-    Nein/Abbrechen on an unexpected question); anything that changes or
+    No/Cancel on an unexpected question); anything that changes or
     deletes data, saves, or discards work is the user's decision — ask.
     Works while VW is blocked (Windows messages from outside, no mouse).
     After the dialog closes, a command that was running continues; fetch
@@ -3369,7 +3373,7 @@ def vw_dialog_press(ctx: Context, button: str, title: Optional[str] = None) -> s
     if title:
         dialogs = [d for d in dialogs if title.lower() in d[1].lower()]
     if not dialogs:
-        return json.dumps({"error": "kein passender Dialog offen"})
+        return json.dumps({"error": "no matching dialog is open"})
     hwnd, dtitle, _a = max(dialogs, key=lambda e: e[2])
     want = button.replace("&", "").strip().lower()
     if want == "close":
@@ -3392,7 +3396,7 @@ def vw_dialog_press(ctx: Context, button: str, title: Optional[str] = None) -> s
 
         u32.EnumChildWindows(hwnd, _child, 0)
         if not hits:
-            return json.dumps({"error": f"Knopf {button!r} nicht gefunden",
+            return json.dumps({"error": f"button {button!r} not found",
                                "dialog": _dialog_details(hwnd, dtitle)}, ensure_ascii=False)
         u32.PostMessageW(hits[0], 0x00F5, 0, 0)                  # BM_CLICK
         pressed = button

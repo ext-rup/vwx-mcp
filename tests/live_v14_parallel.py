@@ -11,8 +11,8 @@ Agent = ns["Agent"]
 
 a, b = Agent("par-A"), Agent("par-B")
 docs = a.call("list_documents")
-front = docs["aktiv"]
-other = next(d["datei"] for d in docs["dokumente"] if d["datei"] and d["datei"] != front)
+front = docs["active"]
+other = next(d["file"] for d in docs["documents"] if d["file"] and d["file"] != front)
 b.call("use_document", document=other, priority="batch")
 res = {"A": [], "B": []}
 
@@ -28,9 +28,9 @@ ta = threading.Thread(target=run, args=(a, "A")); tb = threading.Thread(target=r
 ta.start(); tb.start(); ta.join(); tb.join()
 dt = time.time() - t0
 for _ in range(20):  # restore comes after the idle delay (VWX_RESTORE_DELAY_S)
-    if a.call("list_documents")["aktiv"] == front: break
+    if a.call("list_documents")["active"] == front: break
     time.sleep(0.5)
-fin = a.call("list_documents")["aktiv"]
+fin = a.call("list_documents")["active"]
 okA = all(x == front for x in res["A"]); okB = all(x == other for x in res["B"])
 print("A answers:", set(res["A"])); print("B answers:", set(res["B"]))
 print("16 calls in %.1fs, front at end: %s" % (dt, fin))
