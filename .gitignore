@@ -7,3 +7,12 @@ vwx-plugin/bridge.log
 
 # local render scratch (contains absolute source paths)
 render/
+
+# local planning notes (not part of the fork)
+QUICKSTART.md
+
+# written next to the deployed plug-in, only in the repo during dev
+spotlight_journal.json
+
+# local scratch (test documents, logs)
+.tmp/

@@ -5134,13 +5134,24 @@ def list_commands(p):
     dispatcher (or `execute_script` for truly arbitrary vs.* calls)."""
     import inspect
     filt = (p.get('filter') or '').lower()
+    # Spotlight verbs live in commands_spotlight.py (fork rule: commands.py stays
+    # a vendored upstream file). Merge them so discovery stays one call.
+    spaces = [globals()]
+    try:
+        import commands_spotlight as _spot
+        spaces.append(vars(_spot))
+    except Exception:
+        pass
     out = []
-    for name, obj in globals().items():
-        if name.startswith('_'): continue
-        if not inspect.isfunction(obj): continue
-        if filt and filt not in name.lower(): continue
-        doc_line = ((obj.__doc__ or '').strip().split('\n')[0])[:140]
-        out.append({'name': name, 'doc': doc_line})
+    seen = set()
+    for space in spaces:
+        for name, obj in space.items():
+            if name.startswith('_') or name in seen: continue
+            if not inspect.isfunction(obj): continue
+            if filt and filt not in name.lower(): continue
+            seen.add(name)
+            doc_line = ((obj.__doc__ or '').strip().split('\n')[0])[:140]
+            out.append({'name': name, 'doc': doc_line})
     out.sort(key=lambda x: x['name'])
     return {'count': len(out), 'commands': out}
 

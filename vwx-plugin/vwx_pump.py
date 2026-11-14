@@ -154,27 +154,40 @@ def _write_json(path, obj):
     os.replace(tmp, path)      # atomic: the reader never sees a partial file
 
 
-def _get_commands():
-    """Import commands.py once; reload ONLY when the file changed on disk.
-    The old code reloaded the ~2500-line module on EVERY dispatch — tens of ms
-    per call, seconds across a sweep. The mtime marker lives on the commands
-    module object (persists in sys.modules across vwx_pump reloads), so warm
-    calls are near-free yet an edited/redeployed commands.py hot-reloads at
-    once."""
-    import importlib, commands
+def _get_module(name='commands'):
+    """Import a verb module once; reload ONLY when the file changed on disk."""
+    import importlib
+    mod = __import__(name)
     try:
-        mt = os.path.getmtime(os.path.join(_DIR, 'commands.py'))
+        mt = os.path.getmtime(os.path.join(_DIR, name + '.py'))
     except Exception:
         mt = 0.0
-    if getattr(commands, '_vwx_loaded_mtime', None) != mt:
-        importlib.reload(commands)
-        commands._vwx_loaded_mtime = mt
-    return commands
+    if getattr(mod, '_vwx_loaded_mtime', None) != mt:
+        importlib.reload(mod)
+        mod._vwx_loaded_mtime = mt
+    return mod
+
+
+def _get_commands():
+    """commands.py, hot-reloaded by mtime (see _get_module).
+    The old code reloaded the ~2500-line module on EVERY dispatch — tens of ms
+    per call, seconds across a sweep. The mtime marker lives on the module
+    object (persists in sys.modules across vwx_pump reloads), so warm calls are
+    near-free yet an edited/redeployed commands.py hot-reloads at once."""
+    return _get_module('commands')
 
 def _dispatch(cmd, params):
     try:
-        commands = _get_commands()
-        fn = getattr(commands, cmd, None)
+        fn = getattr(_get_commands(), cmd, None)
+        if fn is None:
+            # Spotlight verbs live in their own module so commands.py can stay
+            # a vendored upstream file (QUICKSTART rule 4). Same hot-reload
+            # contract, and a missing module simply means "unknown command".
+            try:
+                fn = getattr(_get_module('commands_spotlight'), cmd, None)
+            except Exception as e:
+                _log("commands_spotlight not loadable: %s" % e)
+                fn = None
         if fn is None:
             return {'error': 'Unknown command: %s' % cmd}
         return fn(params)

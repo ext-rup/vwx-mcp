@@ -61,6 +61,22 @@ TOOL_TAGS = {
     "get_object_bounds": "query",
     "count_objects": "query",
     "find_objects_by_name": "query",
+    "find_objects": "query",
+    # spotlight (entertainment lighting reads; verbs live in commands_spotlight.py)
+    "get_spotlight_devices": "spotlight",
+    "get_spotlight_device": "spotlight",
+    "get_spotlight_positions": "spotlight",
+    "get_spotlight_patch": "spotlight",
+    "get_spotlight_focus": "spotlight",
+    "get_spotlight_accessories": "spotlight",
+    "get_spotlight_params": "spotlight",
+    "dump_spotlight_params": "spotlight",
+    "get_spotlight_report": "spotlight",
+    "spotlight_worksheet": "spotlight",
+    # spotlight writes (journaled; revert_last undoes the newest batch)
+    "set_spotlight_patch": "spotlight",
+    "renumber_spotlight": "spotlight",
+    "revert_last": "spotlight",
     "for_each_criteria": "query",
     "offset_polygon": "query",
     "polygon_centroid": "query",
@@ -200,6 +216,10 @@ TOOL_TAGS = {
     # sheet and a solid model all need someone to look at the result.
     "screenshot": "escape",
     "vs_index_stats": "escape",
+    # Modal-dialog recovery: when VW blocks on a dialog every other tool hangs,
+    # so these two are the only way out and must never be filtered away.
+    "vw_dialog": "escape",
+    "vw_dialog_press": "escape",
     "create_roof": "bim",
     "create_slab": "bim",
     "join_walls": "bim",
@@ -348,6 +368,10 @@ PRESETS = {
     "baumkataster": {"landscape", "records", "query", "layers", "document",
                      "io", "escape"},
     "minimal": {"document", "query", "escape"},
+    # Spotlight reads are the reason this fork exists; they belong in every
+    # preset that can reach a plot, plus 'full'.
+    "spotlight": {"spotlight", "query", "document", "records", "layers",
+                  "io", "escape"},
 }
 
 

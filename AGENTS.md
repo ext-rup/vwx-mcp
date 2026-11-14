@@ -277,6 +277,91 @@ IFC gotchas (verified live):
 Gotcha: the `…N` GIS functions return **`(ok, value…)`** tuples with a leading
 boolean — `_nums()` in commands.py strips flags generically.
 
+## Spotlight — reading a lighting plot (fork layer)
+
+Twelve verbs in **`vwx-plugin/commands_spotlight.py`** (never in commands.py —
+that file stays vendored/rebaseable; the pump's `_dispatch` falls back to this
+module and `list_commands` merges both). Their MCP wrappers live in
+**`mcp-server/spotlight_tools.py`**, imported by 4 lines at the end of
+`vwx_mcp_server.py` (before `main()`, which blocks in `mcp.run()` — an import
+after it never executes, and a plain `import vwx_mcp_server` from the wrapper
+module would build a second FastMCP instance and answer "Unknown tool").
+Full detail: `docs/SPOTLIGHT.md`.
+
+| Tool | Purpose |
+|---|---|
+| `find_objects(criteria)` | UUIDs + count for any criteria string — the generic entry point |
+| `get_spotlight_devices` | all Lighting Devices with patch/focus fields (`raw:true` = every record field) |
+| `get_spotlight_device` | one device: fields, raw fields, cells, accessories |
+| `get_spotlight_patch` | patch sheet **plus** conflicts: duplicate channel, duplicate/overlapping DMX address, unpatchable |
+| `get_spotlight_positions` | devices grouped by hanging position |
+| `get_spotlight_focus` | devices grouped by focus, with colour/gobo/pan/tilt |
+| `get_spotlight_accessories` | per-cell accessory inventory + 2D/3D placement |
+| `get_spotlight_params` / `dump_spotlight_params` | the parameter catalog (dump writes `spotlight_params.json`) |
+| `set_spotlight_patch` | write patch/focus fields (`fields` bulk, `assignments` per device, `dry_run`) — journaled |
+| `renumber_spotlight` | sequential channels + DMX, stepping by footprint, rolling universes — journaled |
+| `revert_last` | undo the newest write batch from `spotlight_journal.json` |
+| `get_spotlight_report` | paperwork rows as JSON (channel hookup, instrument schedule, patch, focus, weight) |
+| `spotlight_worksheet` | builds a real VW database worksheet and **verifies it cell by cell** |
+
+Lighting Device parameters are addressed by **universal (worksheet) name**, not
+index: `vs.LDevice_GetParamStr(h, cell, accessory, 'channel')` — `cell` 0-based,
+`accessory` **-1 = the device itself**, `>=0` = an attached accessory. A wrong
+name returns `''` instead of raising, so the verbs resolve keys from the
+object's own parametric record (`GetParametricRecord` + `NumFields`/`GetFldName`)
+and report what they could not map in `unresolved`. Every result carries
+`catalog: live | catalog | fallback`; `fallback` means unverified best-effort
+names and adds a `warning`. `raw:true` is the escape hatch.
+
+Patch fields are free text (`U1/001`, `001`, `1`), so `universe_num` /
+`address_num` are parsed tolerantly and returned next to the raw text.
+
+**Verified live on VW2027 Spotlight (32.1.1), 2026-11-14** — one device placed
+with `vs.CreateCustomObject('Lighting Device', p, 0)`:
+
+- type code **86**; parametric record `Lighting Device` with **150** fields;
+- universal names are plain English (`Channel`, `DMX Address`, `Universe`,
+  `Position`, `Focus`, `Color`, `Gobo Data`, `Accessory Inventory`,
+  `Num Channels`, `Lightwright ID`, …) — 27/27 logical keys resolved;
+- **`vs.GetFldType` is not 0..3**: 1 long, 2 bool, 3 real, 4 text (7/8/10/11/
+  14/20/30 = coordinate, popup, control point, angle, symbol definition);
+- **field 0 of the record has a junk name** (private-use chars, type -23248) and
+  passing it to `LDevice_GetParamStr` **kills the Vectorworks process** — hence
+  `_valid_name()`; never pass a non-printable name to a `LDevice_*` call;
+- popup/control-point fields return `''` from `LDevice_GetParamStr`; the record
+  holds the display value, so reads fall back to `vs.GetRField`;
+- **the patch lives in `UniverseAddress`** (`"universe/address"`): `SetRField`
+  into it sticks, `Universe`/`DMX Address` are not derived from it, and
+  `LDevice_GetParamStr` lags a reset behind. `0/0` = not patched (reported as
+  `address_num: null`). Device-level reads therefore prefer the record;
+  cell/accessory reads prefer `LDevice_*`.
+
+**Prerequisite for exact fields**: `dump_spotlight_params` against a document
+that contains at least one Lighting Device → `spotlight_params.json` (a copy
+lives in `vwx-plugin/`).
+
+**Paperwork** (`spotlight_worksheet`) generates its column formulas from the
+universal names the live record reports, then reads every subrow back and
+compares it with the JSON report — `verified:false` plus a `detail[]` naming the
+column, instead of a sheet that silently shows nothing. Weight/power are
+localized text (`"7,5 kg"`), so `_measure()` parses the number and
+`weight_report` adds per-device `weight_kg`/`power_w` and `by_position` totals.
+
+**Writes** go through `_apply`: read before → `SetRField` + `ResetObject` →
+**read back** (a mismatch is `ok:false` with the actual value, never a silent
+success). `LDevice_SetParamStr` does not change the record — `SetRField` does.
+The journal is per document, so `revert_last` refuses a batch from another file
+and skips fields already restored by hand.
+
+**Trigger** (a job file alone does nothing — something must run the menu
+command): the native palette (`bridge/deploy_native_bridge.bat`, production) or
+`bridge/wake_watch.py` (dev fallback: heartbeat + Ctrl+Shift+B with real key
+input, briefly focuses VW). The menu command must be in the workspace:
+`bridge/patch_workspace.py` adds it to the user copy **and** points the
+`defaultWorkspace` preference there; a plug-in command with `ResourceManagerID`
+0 is dropped silently, so the script allocates a real ID.
+Without it the verbs still work and say `catalog: fallback`.
+
 ## Server internals (for tool authors)
 
 - **`@mcp.tool(output_schema=None)`**, never `structured_output=False`. The server

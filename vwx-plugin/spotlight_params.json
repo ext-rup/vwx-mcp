@@ -1,0 +1,1254 @@
+{
+ "generated": "2026-11-14T15:16:27",
+ "verified": true,
+ "source": "vs.GetParametricRecord + NumFields/GetFldName/GetFldType",
+ "strategy": "criteria",
+ "vw_version": [
+  32,
+  1,
+  1,
+  2
+ ],
+ "document": "Untitled 1",
+ "plugin_names": [
+  "Lighting Device"
+ ],
+ "record_name": "Lighting Device",
+ "devices_sampled": 1,
+ "fields_per_device": [
+  150
+ ],
+ "field_count": 150,
+ "fields": [
+  {
+   "name": "Symbol Name",
+   "type": 4,
+   "flag": 0,
+   "type_name": "text",
+   "devices": 1,
+   "sample": null
+  },
+  {
+   "name": "Inst Type",
+   "type": 4,
+   "flag": 0,
+   "type_name": "text",
+   "devices": 1,
+   "sample": null
+  },
+  {
+   "name": "Fixture Mode",
+   "type": 8,
+   "flag": 0,
+   "type_name": "other",
+   "devices": 1,
+   "sample": "Unknown"
+  },
+  {
+   "name": "GDTF Fixture Mode",
+   "type": 8,
+   "flag": 0,
+   "type_name": "other",
+   "devices": 1,
+   "sample": null
+  },
+  {
+   "name": "GDTF Fixture Name",
+   "type": 14,
+   "flag": 0,
+   "type_name": "other",
+   "devices": 1,
+   "sample": null
+  },
+  {
+   "name": "UseGDTFGeometry",
+   "type": 2,
+   "flag": 0,
+   "type_name": "boolean",
+   "devices": 1,
+   "sample": "False"
+  },
+  {
+   "name": "Num Channels",
+   "type": 1,
+   "flag": 0,
+   "type_name": "integer",
+   "devices": 1,
+   "sample": "1"
+  },
+  {
+   "name": "FixtureID",
+   "type": 4,
+   "flag": 0,
+   "type_name": "text",
+   "devices": 1,
+   "sample": null
+  },
+  {
+   "name": "Channel",
+   "type": 4,
+   "flag": 0,
+   "type_name": "text",
+   "devices": 1,
+   "sample": null
+  },
+  {
+   "name": "Purpose",
+   "type": 4,
+   "flag": 0,
+   "type_name": "text",
+   "devices": 1,
+   "sample": null
+  },
+  {
+   "name": "Position",
+   "type": 4,
+   "flag": 0,
+   "type_name": "text",
+   "devices": 1,
+   "sample": null
+  },
+  {
+   "name": "Unit Number",
+   "type": 4,
+   "flag": 0,
+   "type_name": "text",
+   "devices": 1,
+   "sample": null
+  },
+  {
+   "name": "UniverseAddress",
+   "type": 4,
+   "flag": 0,
+   "type_name": "text",
+   "devices": 1,
+   "sample": "0/0"
+  },
+  {
+   "name": "Universe",
+   "type": 4,
+   "flag": 0,
+   "type_name": "text",
+   "devices": 1,
+   "sample": null
+  },
+  {
+   "name": "DMX Address",
+   "type": 1,
+   "flag": 0,
+   "type_name": "integer",
+   "devices": 1,
+   "sample": "0"
+  },
+  {
+   "name": "Absolute Address",
+   "type": 1,
+   "flag": 0,
+   "type_name": "integer",
+   "devices": 1,
+   "sample": "0"
+  },
+  {
+   "name": "System",
+   "type": 8,
+   "flag": 0,
+   "type_name": "other",
+   "devices": 1,
+   "sample": "A"
+  },
+  {
+   "name": "Dimmer",
+   "type": 4,
+   "flag": 0,
+   "type_name": "text",
+   "devices": 1,
+   "sample": null
+  },
+  {
+   "name": "Circuit Number",
+   "type": 4,
+   "flag": 0,
+   "type_name": "text",
+   "devices": 1,
+   "sample": null
+  },
+  {
+   "name": "Circuit Name",
+   "type": 4,
+   "flag": 0,
+   "type_name": "text",
+   "devices": 1,
+   "sample": null
+  },
+  {
+   "name": "Device Type",
+   "type": 8,
+   "flag": 0,
+   "type_name": "other",
+   "devices": 1,
+   "sample": "Light"
+  },
+  {
+   "name": "Weight",
+   "type": 4,
+   "flag": 0,
+   "type_name": "text",
+   "devices": 1,
+   "sample": "0,00 kg"
+  },
+  {
+   "name": "Color",
+   "type": 4,
+   "flag": 0,
+   "type_name": "text",
+   "devices": 1,
+   "sample": null
+  },
+  {
+   "name": "Frame Size",
+   "type": 4,
+   "flag": 0,
+   "type_name": "text",
+   "devices": 1,
+   "sample": null
+  },
+  {
+   "name": "Template",
+   "type": 4,
+   "flag": 0,
+   "type_name": "text",
+   "devices": 1,
+   "sample": null
+  },
+  {
+   "name": "TemplateRot1",
+   "type": 20,
+   "flag": 0,
+   "type_name": "other",
+   "devices": 1,
+   "sample": "0°"
+  },
+  {
+   "name": "Template2",
+   "type": 4,
+   "flag": 0,
+   "type_name": "text",
+   "devices": 1,
+   "sample": null
+  },
+  {
+   "name": "TemplateRot2",
+   "type": 20,
+   "flag": 0,
+   "type_name": "other",
+   "devices": 1,
+   "sample": "0°"
+  },
+  {
+   "name": "Use Legend",
+   "type": 8,
+   "flag": 0,
+   "type_name": "other",
+   "devices": 1,
+   "sample": null
+  },
+  {
+   "name": "Flip Left Right",
+   "type": 2,
+   "flag": 0,
+   "type_name": "boolean",
+   "devices": 1,
+   "sample": "False"
+  },
+  {
+   "name": "Flip Front Back",
+   "type": 2,
+   "flag": 0,
+   "type_name": "boolean",
+   "devices": 1,
+   "sample": "False"
+  },
+  {
+   "name": "Legend View 3D",
+   "type": 8,
+   "flag": 0,
+   "type_name": "other",
+   "devices": 1,
+   "sample": "None"
+  },
+  {
+   "name": "Flip 3D Left Right",
+   "type": 2,
+   "flag": 0,
+   "type_name": "boolean",
+   "devices": 1,
+   "sample": "False"
+  },
+  {
+   "name": "Flip 3D Top Bottom",
+   "type": 2,
+   "flag": 0,
+   "type_name": "boolean",
+   "devices": 1,
+   "sample": "False"
+  },
+  {
+   "name": "Rotate 3D Legend",
+   "type": 2,
+   "flag": 0,
+   "type_name": "boolean",
+   "devices": 1,
+   "sample": "False"
+  },
+  {
+   "name": "Pan",
+   "type": 20,
+   "flag": 0,
+   "type_name": "other",
+   "devices": 1,
+   "sample": "0°"
+  },
+  {
+   "name": "Tilt",
+   "type": 20,
+   "flag": 0,
+   "type_name": "other",
+   "devices": 1,
+   "sample": "0°"
+  },
+  {
+   "name": "Invert pan",
+   "type": 2,
+   "flag": 0,
+   "type_name": "boolean",
+   "devices": 1,
+   "sample": "False"
+  },
+  {
+   "name": "Invert tilt",
+   "type": 2,
+   "flag": 0,
+   "type_name": "boolean",
+   "devices": 1,
+   "sample": "False"
+  },
+  {
+   "name": "Focus",
+   "type": 4,
+   "flag": 0,
+   "type_name": "text",
+   "devices": 1,
+   "sample": null
+  },
+  {
+   "name": "Draw Beam",
+   "type": 2,
+   "flag": 0,
+   "type_name": "boolean",
+   "devices": 1,
+   "sample": "False"
+  },
+  {
+   "name": "Show Beam at",
+   "type": 8,
+   "flag": 0,
+   "type_name": "other",
+   "devices": 1,
+   "sample": "Focus Point"
+  },
+  {
+   "name": "Use Vertical Beam",
+   "type": 2,
+   "flag": 0,
+   "type_name": "boolean",
+   "devices": 1,
+   "sample": "False"
+  },
+  {
+   "name": "Draw Beam as Solid",
+   "type": 2,
+   "flag": 0,
+   "type_name": "boolean",
+   "devices": 1,
+   "sample": "False"
+  },
+  {
+   "name": "Zoom Percentage",
+   "type": 3,
+   "flag": 0,
+   "type_name": "real",
+   "devices": 1,
+   "sample": "100"
+  },
+  {
+   "name": "Field Angle",
+   "type": 20,
+   "flag": 0,
+   "type_name": "other",
+   "devices": 1,
+   "sample": "17°"
+  },
+  {
+   "name": "Field Angle 2",
+   "type": 20,
+   "flag": 0,
+   "type_name": "other",
+   "devices": 1,
+   "sample": "17°"
+  },
+  {
+   "name": "Beam Angle",
+   "type": 20,
+   "flag": 0,
+   "type_name": "other",
+   "devices": 1,
+   "sample": "12°"
+  },
+  {
+   "name": "Beam Angle 2",
+   "type": 20,
+   "flag": 0,
+   "type_name": "other",
+   "devices": 1,
+   "sample": "12°"
+  },
+  {
+   "name": "Lamp Rotation Angle",
+   "type": 20,
+   "flag": 0,
+   "type_name": "other",
+   "devices": 1,
+   "sample": "0°"
+  },
+  {
+   "name": "Throw Distance",
+   "type": 7,
+   "flag": 0,
+   "type_name": "other",
+   "devices": 1,
+   "sample": "3,6e02"
+  },
+  {
+   "name": "Fall off distance",
+   "type": 7,
+   "flag": 0,
+   "type_name": "other",
+   "devices": 1,
+   "sample": "1,5e03"
+  },
+  {
+   "name": "Focus Angle Vertical",
+   "type": 14,
+   "flag": 0,
+   "type_name": "other",
+   "devices": 1,
+   "sample": "0°"
+  },
+  {
+   "name": "Focus Angle Horizontal",
+   "type": 14,
+   "flag": 0,
+   "type_name": "other",
+   "devices": 1,
+   "sample": "90°"
+  },
+  {
+   "name": "Angle To Face Plane",
+   "type": 14,
+   "flag": 0,
+   "type_name": "other",
+   "devices": 1,
+   "sample": "90°"
+  },
+  {
+   "name": "Off Axis Angle",
+   "type": 14,
+   "flag": 0,
+   "type_name": "other",
+   "devices": 1,
+   "sample": "0°"
+  },
+  {
+   "name": "EnableZRot",
+   "type": 2,
+   "flag": 0,
+   "type_name": "boolean",
+   "devices": 1,
+   "sample": "False"
+  },
+  {
+   "name": "Brightness",
+   "type": 3,
+   "flag": 0,
+   "type_name": "real",
+   "devices": 1,
+   "sample": "1"
+  },
+  {
+   "name": "Use Emitter",
+   "type": 2,
+   "flag": 0,
+   "type_name": "boolean",
+   "devices": 1,
+   "sample": "False"
+  },
+  {
+   "name": "Emitter Brightness",
+   "type": 1,
+   "flag": 0,
+   "type_name": "integer",
+   "devices": 1,
+   "sample": "1000"
+  },
+  {
+   "name": "Top Shutter Depth",
+   "type": 3,
+   "flag": 0,
+   "type_name": "real",
+   "devices": 1,
+   "sample": "0"
+  },
+  {
+   "name": "Top Shutter Angle",
+   "type": 20,
+   "flag": 0,
+   "type_name": "other",
+   "devices": 1,
+   "sample": "0°"
+  },
+  {
+   "name": "Bottom Shutter Depth",
+   "type": 3,
+   "flag": 0,
+   "type_name": "real",
+   "devices": 1,
+   "sample": "0"
+  },
+  {
+   "name": "Bottom Shutter Angle",
+   "type": 20,
+   "flag": 0,
+   "type_name": "other",
+   "devices": 1,
+   "sample": "0°"
+  },
+  {
+   "name": "Left Shutter Depth",
+   "type": 3,
+   "flag": 0,
+   "type_name": "real",
+   "devices": 1,
+   "sample": "0"
+  },
+  {
+   "name": "Left Shutter Angle",
+   "type": 20,
+   "flag": 0,
+   "type_name": "other",
+   "devices": 1,
+   "sample": "0°"
+  },
+  {
+   "name": "Right Shutter Depth",
+   "type": 3,
+   "flag": 0,
+   "type_name": "real",
+   "devices": 1,
+   "sample": "0"
+  },
+  {
+   "name": "Right Shutter Angle",
+   "type": 20,
+   "flag": 0,
+   "type_name": "other",
+   "devices": 1,
+   "sample": "0°"
+  },
+  {
+   "name": "Edit Accessory",
+   "type": 8,
+   "flag": 0,
+   "type_name": "other",
+   "devices": 1,
+   "sample": "-2"
+  },
+  {
+   "name": "Edit Cell",
+   "type": 8,
+   "flag": 0,
+   "type_name": "other",
+   "devices": 1,
+   "sample": "-1"
+  },
+  {
+   "name": "Cost",
+   "type": 3,
+   "flag": 0,
+   "type_name": "real",
+   "devices": 1,
+   "sample": "0"
+  },
+  {
+   "name": "Mark",
+   "type": 4,
+   "flag": 0,
+   "type_name": "text",
+   "devices": 1,
+   "sample": null
+  },
+  {
+   "name": "Time",
+   "type": 3,
+   "flag": 0,
+   "type_name": "real",
+   "devices": 1,
+   "sample": "0"
+  },
+  {
+   "name": "User Field 1",
+   "type": 4,
+   "flag": 0,
+   "type_name": "text",
+   "devices": 1,
+   "sample": null
+  },
+  {
+   "name": "User Field 2",
+   "type": 4,
+   "flag": 0,
+   "type_name": "text",
+   "devices": 1,
+   "sample": null
+  },
+  {
+   "name": "User Field 3",
+   "type": 4,
+   "flag": 0,
+   "type_name": "text",
+   "devices": 1,
+   "sample": null
+  },
+  {
+   "name": "User Field 4",
+   "type": 4,
+   "flag": 0,
+   "type_name": "text",
+   "devices": 1,
+   "sample": null
+  },
+  {
+   "name": "User Field 5",
+   "type": 4,
+   "flag": 0,
+   "type_name": "text",
+   "devices": 1,
+   "sample": null
+  },
+  {
+   "name": "User Field 6",
+   "type": 4,
+   "flag": 0,
+   "type_name": "text",
+   "devices": 1,
+   "sample": null
+  },
+  {
+   "name": "Wattage",
+   "type": 4,
+   "flag": 0,
+   "type_name": "text",
+   "devices": 1,
+   "sample": null
+  },
+  {
+   "name": "Voltage",
+   "type": 1,
+   "flag": 0,
+   "type_name": "integer",
+   "devices": 1,
+   "sample": "0"
+  },
+  {
+   "name": "Breaker ID",
+   "type": 4,
+   "flag": 0,
+   "type_name": "text",
+   "devices": 1,
+   "sample": null
+  },
+  {
+   "name": "Symbol Definition",
+   "type": 30,
+   "flag": 0,
+   "type_name": "other",
+   "devices": 1,
+   "sample": null
+  },
+  {
+   "name": "Old Fixture Mode",
+   "type": 4,
+   "flag": 0,
+   "type_name": "text",
+   "devices": 1,
+   "sample": "Unknown"
+  },
+  {
+   "name": "Vision Lit Override",
+   "type": 2,
+   "flag": 0,
+   "type_name": "boolean",
+   "devices": 1,
+   "sample": "False"
+  },
+  {
+   "name": "Vision Fixture Name",
+   "type": 4,
+   "flag": 0,
+   "type_name": "text",
+   "devices": 1,
+   "sample": null
+  },
+  {
+   "name": "GDTF Fixture Type ID",
+   "type": 1,
+   "flag": 0,
+   "type_name": "integer",
+   "devices": 1,
+   "sample": "0"
+  },
+  {
+   "name": "GDTF Fixture Custom ID",
+   "type": 1,
+   "flag": 0,
+   "type_name": "integer",
+   "devices": 1,
+   "sample": "0"
+  },
+  {
+   "name": "GDTF CIE Color",
+   "type": 4,
+   "flag": 0,
+   "type_name": "text",
+   "devices": 1,
+   "sample": null
+  },
+  {
+   "name": "Legend Symbol Definition",
+   "type": 30,
+   "flag": 0,
+   "type_name": "other",
+   "devices": 1,
+   "sample": null
+  },
+  {
+   "name": "Old Inst Type",
+   "type": 4,
+   "flag": 0,
+   "type_name": "text",
+   "devices": 1,
+   "sample": null
+  },
+  {
+   "name": "Gobo Data",
+   "type": 4,
+   "flag": 0,
+   "type_name": "text",
+   "devices": 1,
+   "sample": null
+  },
+  {
+   "name": "Color Data",
+   "type": 4,
+   "flag": 0,
+   "type_name": "text",
+   "devices": 1,
+   "sample": null
+  },
+  {
+   "name": "GDTF Gobo Data",
+   "type": 4,
+   "flag": 0,
+   "type_name": "text",
+   "devices": 1,
+   "sample": null
+  },
+  {
+   "name": "GDTF Color Data",
+   "type": 4,
+   "flag": 0,
+   "type_name": "text",
+   "devices": 1,
+   "sample": null
+  },
+  {
+   "name": "Color Flag Data",
+   "type": 4,
+   "flag": 0,
+   "type_name": "text",
+   "devices": 1,
+   "sample": null
+  },
+  {
+   "name": "Light On",
+   "type": 2,
+   "flag": 0,
+   "type_name": "boolean",
+   "devices": 1,
+   "sample": "False"
+  },
+  {
+   "name": "Lit Fog",
+   "type": 2,
+   "flag": 0,
+   "type_name": "boolean",
+   "devices": 1,
+   "sample": "False"
+  },
+  {
+   "name": "Min Field Angle",
+   "type": 20,
+   "flag": 0,
+   "type_name": "other",
+   "devices": 1,
+   "sample": "90°"
+  },
+  {
+   "name": "Max Field Angle",
+   "type": 20,
+   "flag": 0,
+   "type_name": "other",
+   "devices": 1,
+   "sample": "90°"
+  },
+  {
+   "name": "Min Beam Angle",
+   "type": 20,
+   "flag": 0,
+   "type_name": "other",
+   "devices": 1,
+   "sample": "90°"
+  },
+  {
+   "name": "Max Beam Angle",
+   "type": 20,
+   "flag": 0,
+   "type_name": "other",
+   "devices": 1,
+   "sample": "90°"
+  },
+  {
+   "name": "Rotate3DPosition",
+   "type": 2,
+   "flag": 0,
+   "type_name": "boolean",
+   "devices": 1,
+   "sample": "False"
+  },
+  {
+   "name": "xRot",
+   "type": 3,
+   "flag": 0,
+   "type_name": "real",
+   "devices": 1,
+   "sample": "0"
+  },
+  {
+   "name": "yRot",
+   "type": 3,
+   "flag": 0,
+   "type_name": "real",
+   "devices": 1,
+   "sample": "0"
+  },
+  {
+   "name": "zRot",
+   "type": 3,
+   "flag": 0,
+   "type_name": "real",
+   "devices": 1,
+   "sample": "0"
+  },
+  {
+   "name": "zRot2D",
+   "type": 20,
+   "flag": 0,
+   "type_name": "other",
+   "devices": 1,
+   "sample": "0°"
+  },
+  {
+   "name": "Body Inventory",
+   "type": 4,
+   "flag": 0,
+   "type_name": "text",
+   "devices": 1,
+   "sample": null
+  },
+  {
+   "name": "Lens Inventory",
+   "type": 4,
+   "flag": 0,
+   "type_name": "text",
+   "devices": 1,
+   "sample": null
+  },
+  {
+   "name": "Accessory Inventory",
+   "type": 4,
+   "flag": 0,
+   "type_name": "text",
+   "devices": 1,
+   "sample": null
+  },
+  {
+   "name": "Device Boby",
+   "type": 4,
+   "flag": 0,
+   "type_name": "text",
+   "devices": 1,
+   "sample": null
+  },
+  {
+   "name": "Device Lens",
+   "type": 4,
+   "flag": 0,
+   "type_name": "text",
+   "devices": 1,
+   "sample": null
+  },
+  {
+   "name": "ShowData",
+   "type": 2,
+   "flag": 0,
+   "type_name": "boolean",
+   "devices": 1,
+   "sample": "False"
+  },
+  {
+   "name": "Ganged With",
+   "type": 4,
+   "flag": 0,
+   "type_name": "text",
+   "devices": 1,
+   "sample": null
+  },
+  {
+   "name": "Use Active Symbol",
+   "type": 2,
+   "flag": 0,
+   "type_name": "boolean",
+   "devices": 1,
+   "sample": "False"
+  },
+  {
+   "name": "ControlPoint01X",
+   "type": 10,
+   "flag": 0,
+   "type_name": "other",
+   "devices": 1,
+   "sample": "0e00"
+  },
+  {
+   "name": "ControlPoint01Y",
+   "type": 11,
+   "flag": 0,
+   "type_name": "other",
+   "devices": 1,
+   "sample": "3,81e02"
+  },
+  {
+   "name": "ControlPoint02X",
+   "type": 10,
+   "flag": 0,
+   "type_name": "other",
+   "devices": 1,
+   "sample": "0e00"
+  },
+  {
+   "name": "ControlPoint02Y",
+   "type": 11,
+   "flag": 0,
+   "type_name": "other",
+   "devices": 1,
+   "sample": "2,54e02"
+  },
+  {
+   "name": "ControlPoint03X",
+   "type": 10,
+   "flag": 0,
+   "type_name": "other",
+   "devices": 1,
+   "sample": "0e00"
+  },
+  {
+   "name": "ControlPoint03Y",
+   "type": 11,
+   "flag": 0,
+   "type_name": "other",
+   "devices": 1,
+   "sample": "1,27e02"
+  },
+  {
+   "name": "ControlPoint04X",
+   "type": 10,
+   "flag": 0,
+   "type_name": "other",
+   "devices": 1,
+   "sample": "0e00"
+  },
+  {
+   "name": "ControlPoint04Y",
+   "type": 11,
+   "flag": 0,
+   "type_name": "other",
+   "devices": 1,
+   "sample": "0e00"
+  },
+  {
+   "name": "ControlPoint05X",
+   "type": 10,
+   "flag": 0,
+   "type_name": "other",
+   "devices": 1,
+   "sample": "0e00"
+  },
+  {
+   "name": "ControlPoint05Y",
+   "type": 11,
+   "flag": 0,
+   "type_name": "other",
+   "devices": 1,
+   "sample": "-1,27e02"
+  },
+  {
+   "name": "ControlPoint06X",
+   "type": 10,
+   "flag": 0,
+   "type_name": "other",
+   "devices": 1,
+   "sample": "0e00"
+  },
+  {
+   "name": "ControlPoint06Y",
+   "type": 11,
+   "flag": 0,
+   "type_name": "other",
+   "devices": 1,
+   "sample": "-2,54e02"
+  },
+  {
+   "name": "ControlPoint07X",
+   "type": 10,
+   "flag": 0,
+   "type_name": "other",
+   "devices": 1,
+   "sample": "0e00"
+  },
+  {
+   "name": "ControlPoint07Y",
+   "type": 11,
+   "flag": 0,
+   "type_name": "other",
+   "devices": 1,
+   "sample": "0e00"
+  },
+  {
+   "name": "ControlPoint08X",
+   "type": 10,
+   "flag": 0,
+   "type_name": "other",
+   "devices": 1,
+   "sample": "0e00"
+  },
+  {
+   "name": "ControlPoint08Y",
+   "type": 11,
+   "flag": 0,
+   "type_name": "other",
+   "devices": 1,
+   "sample": "0e00"
+  },
+  {
+   "name": "X Location",
+   "type": 7,
+   "flag": 0,
+   "type_name": "other",
+   "devices": 1,
+   "sample": "0e00"
+  },
+  {
+   "name": "Y Location",
+   "type": 7,
+   "flag": 0,
+   "type_name": "other",
+   "devices": 1,
+   "sample": "0e00"
+  },
+  {
+   "name": "Z Location",
+   "type": 7,
+   "flag": 0,
+   "type_name": "other",
+   "devices": 1,
+   "sample": "0e00"
+  },
+  {
+   "name": "Do Not Edit",
+   "type": 4,
+   "flag": 0,
+   "type_name": "text",
+   "devices": 1,
+   "sample": "0.000000,0.000000,0.000000,0.000000,0.000000,381.000000,0.000000,254.000000,0.000000,127.000000,0.000000,0.000000,0.000000,-127.000000,0.000000,-254.000000,0.000000,0.000000,0.000000,0.000000,0,0,0,0,0,0,0,0"
+  },
+  {
+   "name": "Alt-Chan",
+   "type": 4,
+   "flag": 0,
+   "type_name": "text",
+   "devices": 1,
+   "sample": null
+  },
+  {
+   "name": "Alt-Dim",
+   "type": 4,
+   "flag": 0,
+   "type_name": "text",
+   "devices": 1,
+   "sample": null
+  },
+  {
+   "name": "Alt-Unit",
+   "type": 4,
+   "flag": 0,
+   "type_name": "text",
+   "devices": 1,
+   "sample": null
+  },
+  {
+   "name": "Alt-Circ",
+   "type": 4,
+   "flag": 0,
+   "type_name": "text",
+   "devices": 1,
+   "sample": null
+  },
+  {
+   "name": "Is New",
+   "type": 4,
+   "flag": 0,
+   "type_name": "text",
+   "devices": 1,
+   "sample": "False"
+  },
+  {
+   "name": "__Version",
+   "type": 1,
+   "flag": 0,
+   "type_name": "integer",
+   "devices": 1,
+   "sample": "3211"
+  },
+  {
+   "name": "NoExport",
+   "type": 2,
+   "flag": 0,
+   "type_name": "boolean",
+   "devices": 1,
+   "sample": "False"
+  },
+  {
+   "name": "Lightwright ID",
+   "type": 4,
+   "flag": 0,
+   "type_name": "text",
+   "devices": 1,
+   "sample": null
+  },
+  {
+   "name": "RGBColor",
+   "type": 4,
+   "flag": 0,
+   "type_name": "text",
+   "devices": 1,
+   "sample": "65535,65535,65535"
+  },
+  {
+   "name": "UID",
+   "type": 4,
+   "flag": 0,
+   "type_name": "text",
+   "devices": 1,
+   "sample": "1001.1.1.0.0"
+  },
+  {
+   "name": "__CommPasteName",
+   "type": 4,
+   "flag": 0,
+   "type_name": "text",
+   "devices": 1,
+   "sample": null
+  },
+  {
+   "name": "__LabelHandlesData",
+   "type": 4,
+   "flag": 0,
+   "type_name": "text",
+   "devices": 1,
+   "sample": "{\n\t\"handles\" : [\n\t\t{\n\t\t\t\"index\" : 1,\n\t\t\t\"override\" : false,\n\t\t\t\"x\" : 0,\n\t\t\t\"y\" : 381\n\t\t},\n\t\t{\n\t\t\t\"index\" : 2,\n\t\t\t\"override\" : false,\n\t\t\t\"x\" : 0,\n\t\t\t\"y\" : 254\n\t\t},\n\t\t{\n\t\t\t\"index\" : 3,\n\t\t\t\"override\" : false,\n\t\t\t\"x\" : 0,\n\t\t\t\"y\" : 127\n\t\t},\n\t\t{\n\t\t\t\"index\" : 4,\n\t\t\t\"override\" : false,\n\t\t\t\"x\" : 0,\n\t\t\t\"y\" : 0\n\t\t},\n\t\t{\n\t\t\t\"index\" : 5,\n\t\t\t\"override\" : false,\n\t\t\t\"x\" : 0,\n\t\t\t\"y\" : -127\n\t\t},\n\t\t{\n\t\t\t\"index\" : 6,\n\t\t\t\"override\" : false,\n\t\t\t\"x\" : 0,\n\t\t\t\"y\" : -254\n\t\t},\n\t\t{\n\t\t\t\"index\" : 7,\n\t\t\t\"override\" : false,\n\t\t\t\"x\" : 0,\n\t\t\t\"y\" : 0\n\t\t},\n\t\t{\n\t\t\t\"index\" : 8,\n\t\t\t\"override\" : false,\n\t\t\t\"x\" : 0,\n\t\t\t\"y\" : 0\n\t\t}\n\t]\n}"
+  },
+  {
+   "name": "__LabelHandles3DData",
+   "type": 4,
+   "flag": 0,
+   "type_name": "text",
+   "devices": 1,
+   "sample": "{\n\t\"handles\" : []\n}"
+  },
+  {
+   "name": "__CellsCount",
+   "type": 1,
+   "flag": 0,
+   "type_name": "integer",
+   "devices": 1,
+   "sample": "1"
+  },
+  {
+   "name": "__AccessoriesCount",
+   "type": 1,
+   "flag": 0,
+   "type_name": "integer",
+   "devices": 1,
+   "sample": "0"
+  }
+ ],
+ "keys": {
+  "channel": "Channel",
+  "dimmer": "Dimmer",
+  "universe": "Universe",
+  "address": "DMX Address",
+  "position": "Position",
+  "focus": "Focus",
+  "color": "Color",
+  "gobo": "Gobo Data",
+  "accessory": "Accessory Inventory",
+  "unit_number": "Unit Number",
+  "device_type": "Device Type",
+  "symbol_name": "Symbol Name",
+  "purpose": "Purpose",
+  "pan": "Pan",
+  "tilt": "Tilt",
+  "rotation": "zRot",
+  "weight": "Weight",
+  "power": "Wattage",
+  "dmx_footprint": "Num Channels",
+  "device_id": "FixtureID",
+  "console_id": "Lightwright ID",
+  "universe_address": "UniverseAddress",
+  "absolute_address": "Absolute Address",
+  "circuit": "Circuit Number",
+  "mark": "Mark",
+  "system": "System",
+  "device_name": "Symbol Name"
+ },
+ "unresolved_keys": []
+}

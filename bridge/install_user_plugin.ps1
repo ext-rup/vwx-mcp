@@ -35,13 +35,18 @@ Write-Host "Target: Vectorworks $Year"
 $plugins = Join-Path $vwRoot "$Year\Plug-ins"
 if (-not (Test-Path $plugins)) { throw "$plugins does not exist. Start Vectorworks $Year once first." }
 
-# Safe while Vectorworks runs: the pump hot-reloads vwx_pump.py and commands.py.
+# Safe while Vectorworks runs: the pump hot-reloads vwx_pump.py, commands.py and
+# commands_spotlight.py (the pump dispatches to every module it can import).
+# Copy every .py plus the index — a hardcoded list silently skipped
+# commands_spotlight.py the first time it was added.
 $dst = Join-Path $plugins 'VW-MCP'
 New-Item -ItemType Directory -Force $dst | Out-Null
-foreach ($f in 'commands.py', 'vwx_pump.py', 'vwx_mcp_bridge.py', 'vs_index.json', 'BridgeStart_MenuCommand.py') {
-    Copy-Item (Join-Path $repo "vwx-plugin\$f") $dst -Force
-    Write-Host "  VW-MCP\$f"
-}
+Get-ChildItem (Join-Path $repo 'vwx-plugin') -File |
+    Where-Object { $_.Extension -in '.py', '.json' } |
+    ForEach-Object {
+        Copy-Item $_.FullName $dst -Force
+        Write-Host "  VW-MCP\$($_.Name)"
+    }
 
 $vsm = Join-Path $plugins 'VWX Bridge Start.vsm'
 Write-Host ''
@@ -53,10 +58,15 @@ Manual steps in Vectorworks $Year (once per new major version):
  1. Extras > Plug-ins > Plug-in-Manager > Eigene Plug-ins > Neu... > Menuebefehl,
     name exactly "VWX Bridge Start". Select it > Code... > language Python >
     paste vwx-plugin\BridgeStart_MenuCommand.py > OK.
- 2. Arbeitsumgebung anpassen > Menues: drag "VWX Bridge Palette anzeigen",
-    "VWX Bridge Start" (shortcut Ctrl+Umschalt+B) and "VWX Pump (intern)" into Extras.
- 3. Native palette: bridge\deploy_native_bridge.bat (Vectorworks closed, UAC).
- 4. Extras > VWX Bridge Palette anzeigen; leave it open (floating or docked).
- 5. Restart the vwx-mcp server: it picks the plug-in folder at startup.
+ 2. Menu + shortcut, scripted (Vectorworks CLOSED):
+      python bridge\patch_workspace.py --workspace Spotlight --year $Year
+    It adds "VWX Bridge Start" (Ctrl+Shift+B) to Tools, gives it a real
+    ResourceManagerID, and points defaultWorkspace at the user copy — all three
+    are required; a hand-written entry with ID 0 is dropped silently.
+    (GUI alternative: Arbeitsumgebung anpassen > Menues, drag the command in.)
+ 3. Trigger: either the native palette (bridge\deploy_native_bridge.bat,
+    Vectorworks closed, UAC) or, without it, bridge\wake_watch.py, which keeps
+    ipc\native.alive fresh and fires Ctrl+Shift+B when a job appears.
+ 4. Restart the vwx-mcp server: it picks the plug-in folder at startup.
 Check: every runner start logs "start: invoked" in VW-MCP\bridge.log.
 "@
