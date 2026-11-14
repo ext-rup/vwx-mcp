@@ -321,6 +321,29 @@ Twelve read verbs; full detail in `docs/CONNECTCAD.md`.
 | `get_braceworks_trusses` | straight/curved trusses, length, distributed weight |
 | `get_braceworks_loads` | per-origin totals: hoists, load, capacity, reaction force |
 
+## MVR exchange (M6) — `mvr_tools.py` + `vwx_gui.py` + `mvr_file.py`
+
+MVR has **no `vs.*` surface** on VW2027 (0 GDTF/MVR functions) and
+`DoMenuTextByName('Export MVR', 0)` raises a VW script error, so these tools
+drive the menu with real input. Detail in `docs/MVR.md`.
+
+| Tool | Purpose |
+|---|---|
+| `export_mvr` | File > Export > Export MVR..., verified by the file on disk |
+| `import_mvr` | File > Import > Import MVR..., reports VW's verdict + object count delta |
+| `inspect_mvr` | reads the MVR ZIP/XML in pure Python (no VW): layers, objects, GDTF |
+| `mvr_dialog` | what MVR dialog is on screen — for handing the flow to a GUI agent |
+
+- **VW menus are untitled `Afx:` popups**, not `#32768` — `GetMenuString` finds
+  nothing, so the route is counted arrow presses, verified by the dialog title.
+- **A path cannot be typed into VW's file dialog**: `:` and backslash become
+  the literal character `ß` (`C:\Users\...` -> `ßUsersß...`). Type the file
+  NAME, then move the file to where the caller wants it.
+- **The Open dialog ignores typed input** from outside the process (the Save
+  dialog does not) — the file must be in the dialog's current folder.
+- **VW2027 refuses an MVR with no fixtures**: round-tripping a ConnectCAD-only
+  plot gives "could not find any data to load from the specified MVR file".
+
 Findings that cost a crash or a silent zero (all coded in):
 
 - **`CC_GetCircuitSource` / `CC_GetCircuitDest` hard-crash VW2027** — process

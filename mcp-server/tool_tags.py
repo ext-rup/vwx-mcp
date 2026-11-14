@@ -91,6 +91,11 @@ TOOL_TAGS = {
     "get_braceworks_hoists": "braceworks",
     "get_braceworks_trusses": "braceworks",
     "get_braceworks_loads": "braceworks",
+    # MVR exchange (GUI-driven: the command is not scriptable in VW2027)
+    "export_mvr": "mvr",
+    "import_mvr": "mvr",
+    "inspect_mvr": "mvr",
+    "mvr_dialog": "mvr",
     "for_each_criteria": "query",
     "offset_polygon": "query",
     "polygon_centroid": "query",
@@ -392,6 +397,7 @@ PRESETS = {
                    "io", "escape"},
     "braceworks": {"braceworks", "query", "document", "records", "layers",
                    "io", "escape"},
+    "mvr": {"mvr", "query", "document", "io", "escape"},
 }
 
 

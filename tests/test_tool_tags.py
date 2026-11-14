@@ -25,7 +25,8 @@ def _registered_tools():
     """
     names = []
     for fname in ('vwx_mcp_server.py', 'spotlight_tools.py',
-                  'connectcad_tools.py', 'braceworks_tools.py'):
+                  'connectcad_tools.py', 'braceworks_tools.py',
+                  'mvr_tools.py'):
         path = os.path.join(REPO, 'mcp-server', fname)
         tree = ast.parse(open(path, encoding='utf-8').read())
         for node in tree.body:
