@@ -3714,9 +3714,10 @@ def main():
     else:
         mcp.run(transport=transport)
 
-# The Spotlight tools live in their own module (fork layer, see QUICKSTART rule
-# 4). Imported here, not at the end of the file: main() blocks in mcp.run().
-import spotlight_tools  # noqa: E402,F401
+# The fork's tools live in their own modules (see QUICKSTART rule 4); fork_tools
+# imports every one of them, so this stays a one-line diff however many there
+# are. Imported before main(), which blocks in mcp.run().
+import fork_tools  # noqa: E402,F401
 
 if __name__ == "__main__":
     main()

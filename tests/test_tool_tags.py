@@ -18,11 +18,14 @@ import tool_tags  # noqa: E402
 def _registered_tools():
     """Names of every function decorated with @vtool.
 
-    Two modules: the vendored server and the fork's spotlight_tools.py (which
-    the server imports at the end so its own diff stays 5 lines).
+    Every module the server registers tools from: the vendored server plus each
+    fork tool module (fork_tools.py imports them so the vendored file stays a
+    one-line diff). A new fork module must be added here AND to fork_tools.py —
+    the stale-tag test below catches the second half of that mistake.
     """
     names = []
-    for fname in ('vwx_mcp_server.py', 'spotlight_tools.py'):
+    for fname in ('vwx_mcp_server.py', 'spotlight_tools.py',
+                  'connectcad_tools.py', 'braceworks_tools.py'):
         path = os.path.join(REPO, 'mcp-server', fname)
         tree = ast.parse(open(path, encoding='utf-8').read())
         for node in tree.body:

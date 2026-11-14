@@ -136,14 +136,28 @@ def main(argv=None) -> int:
         print(f"  {len(seen)} job(s) already queued — firing once", flush=True)
         send_start_shortcut(0, args.verbose)
     wake_mtime = wake.stat().st_mtime if wake.exists() else 0.0
+    beat_fail = 0
 
     while True:
         tmp = alive.with_suffix(".tmp")
         try:
             tmp.write_text(f"{time.time():.3f} 0", encoding="utf-8")
             os.replace(tmp, alive)
+            beat_fail = 0
         except Exception as exc:                      # pragma: no cover
-            print(f"  heartbeat failed: {exc}", flush=True)
+            # A reader can hold native.alive open WITHOUT FILE_SHARE_DELETE
+            # (Vectorworks' native plug-in does), which makes the atomic replace
+            # fail with Access denied. The reader only looks at the mtime, so
+            # writing in place is fine — a torn read of a 20-byte file is not a
+            # real risk, and the alternative is a dead heartbeat, after which
+            # the server refuses every job with VW_BRIDGE_DOWN.
+            try:
+                alive.write_text(f"{time.time():.3f} 0", encoding="utf-8")
+                beat_fail = 0
+            except Exception:
+                beat_fail += 1
+                if beat_fail in (1, 60):              # once, then once a minute
+                    print(f"  heartbeat failed ({beat_fail}x): {exc}", flush=True)
 
         if wake.exists():
             mtime = wake.stat().st_mtime

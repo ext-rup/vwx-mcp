@@ -77,6 +77,20 @@ TOOL_TAGS = {
     "set_spotlight_patch": "spotlight",
     "renumber_spotlight": "spotlight",
     "revert_last": "spotlight",
+    # connectcad (reads + paperwork; verbs live in commands_connectcad.py)
+    "get_connectcad_devices": "connectcad",
+    "get_connectcad_circuits": "connectcad",
+    "get_connectcad_cables": "connectcad",
+    "get_connectcad_rooms": "connectcad",
+    "get_connectcad_racks": "connectcad",
+    "get_connectcad_signals": "connectcad",
+    "get_connectcad_connectors": "connectcad",
+    "get_connectcad_schedule": "connectcad",
+    "connectcad_worksheet": "connectcad",
+    # braceworks (rigging reads; verbs live in commands_braceworks.py)
+    "get_braceworks_hoists": "braceworks",
+    "get_braceworks_trusses": "braceworks",
+    "get_braceworks_loads": "braceworks",
     "for_each_criteria": "query",
     "offset_polygon": "query",
     "polygon_centroid": "query",
@@ -372,6 +386,12 @@ PRESETS = {
     # preset that can reach a plot, plus 'full'.
     "spotlight": {"spotlight", "query", "document", "records", "layers",
                   "io", "escape"},
+    # ConnectCAD plots are a different job from a lighting plot, so they get
+    # their own preset rather than riding along with 'spotlight'.
+    "connectcad": {"connectcad", "query", "document", "records", "layers",
+                   "io", "escape"},
+    "braceworks": {"braceworks", "query", "document", "records", "layers",
+                   "io", "escape"},
 }
 
 

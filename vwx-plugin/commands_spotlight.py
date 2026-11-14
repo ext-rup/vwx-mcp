@@ -829,16 +829,35 @@ def _num(v):
         return None
 
 
+# What a worksheet shows instead of an empty value, and how VW renders a popup
+# choice it has no label for. Both are display artifacts, not data.
+_EMPTY_MARKS = ('', '---', '--', '-')
+
+
 def _same(a, b):
     """Semantic equality for a read-back check.
 
     Vectorworks normalizes on reset ('1/001' -> '1/1', '01' -> '1'), so a strict
     string compare would report a successful write as failed. Numbers compare as
     numbers, 'U/A' pairs as pairs, everything else case/space-insensitively.
+
+    A worksheet cell is a *rendering*, so three display forms are folded in:
+      * empty is '---' in a numeric column,
+      * a popup choice with no label shows as '<generic>' for 'Generic',
+      * measurements are rounded to 3 decimals ('41,97770815' -> '41,978'),
+        hence the relative tolerance below.
     """
     if a is None or b is None:
         return a is b
     sa, sb = str(a).strip(), str(b).strip()
+    if sa == sb:
+        return True
+    if sa in _EMPTY_MARKS and sb in _EMPTY_MARKS:
+        return True
+    if sa.startswith('<') and sa.endswith('>') and len(sa) > 2:
+        sa = sa[1:-1].strip()
+    if sb.startswith('<') and sb.endswith('>') and len(sb) > 2:
+        sb = sb[1:-1].strip()
     if sa == sb:
         return True
     if '/' in sa and '/' in sb:
@@ -847,7 +866,7 @@ def _same(a, b):
         return len(pa) == len(pb) and all(_same(x, y) for x, y in zip(pa, pb))
     na, nb = _num(sa), _num(sb)
     if na is not None and nb is not None:
-        return abs(na - nb) < 1e-9
+        return abs(na - nb) <= max(1e-6, 1e-3 * max(abs(na), abs(nb)))
     return sa.casefold() == sb.casefold()
 
 
@@ -1397,12 +1416,17 @@ def _ws_cell_text(ws, row, col, subrow):
     return _c._safe(lambda: vs.GetWSSubrowCellString(ws, row, col, subrow))
 
 
-def _verify_sheet(ws, db_row, columns, expected):
+def _verify_sheet(ws, db_row, columns, expected, types=None):
     """Compare every worksheet column against the report data.
 
     Multiset comparison per column: subrow order is VW's business (document
     order), but the *set* of values must match exactly. Returns
-    (verified, per-column detail) with up to three examples per column.
+    (verified, subrows, per-column detail).
+
+    `types` maps a logical key to its vs.GetFldType code. A POPUP field (8)
+    renders its choice LABEL in the cell, not the stored value — a ConnectCAD
+    device stores 'VideoJack' and the sheet shows 'Video Jackfield' — so those
+    columns are checked for presence only and flagged `rendered: true`.
     """
     subrows = _c._safe(lambda: vs.GetWSSubrowCount(ws, db_row)) or 0
     if isinstance(subrows, tuple):
@@ -1414,12 +1438,26 @@ def _verify_sheet(ws, db_row, columns, expected):
                 for r in expected]
         got_n = sorted(g.strip() for g in got if g is not None)
         want_n = sorted(w.strip() for w in want)
-        same = len(got_n) == len(want_n) and all(
-            _same(a, b) for a, b in zip(got_n, want_n))
+        entry = {'column': _header, 'key': logical,
+                 'filled': sum(1 for g in got_n if g and g not in _EMPTY_MARKS)}
+        if (types or {}).get(logical) == 8:
+            same = entry['filled'] == sum(1 for w in want_n if w)
+            entry['rendered'] = True
+        else:
+            same = len(got_n) == len(want_n) and all(
+                _same(a, b) for a, b in zip(got_n, want_n))
+        entry['ok'] = same
         ok = ok and same
-        entry = {'column': _header, 'key': logical, 'ok': same,
-                 'filled': sum(1 for g in got_n if g)}
         if not same:
+            # Show the values that actually differ, not the first three: the
+            # whole point of the detail is to say WHICH row is wrong.
+            pairs = [(w, g) for w, g in zip(want_n, got_n) if not _same(w, g)]
+            if pairs:
+                entry['mismatches'] = [{'expected': w, 'got': g}
+                                       for w, g in pairs[:3]]
+            else:
+                entry['expected_count'] = len(want_n)
+                entry['got_count'] = len(got_n)
             entry['expected'] = want_n[:3]
             entry['got'] = got_n[:3]
         detail.append(entry)

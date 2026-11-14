@@ -304,6 +304,44 @@ Full detail: `docs/SPOTLIGHT.md`.
 | `get_spotlight_report` | paperwork rows as JSON (channel hookup, instrument schedule, patch, focus, weight) |
 | `spotlight_worksheet` | builds a real VW database worksheet and **verifies it cell by cell** |
 
+## ConnectCAD + Braceworks (M6) — `commands_connectcad.py`, `commands_braceworks.py`
+
+Twelve read verbs; full detail in `docs/CONNECTCAD.md`.
+
+| Tool | Purpose |
+|---|---|
+| `get_connectcad_devices` | devices with room/rack/U, power, weight, BTU |
+| `get_connectcad_circuits` | circuits with full source->dest topology + length |
+| `get_connectcad_cables` | cable paths: id, count, length, circuits, total |
+| `get_connectcad_rooms` / `_racks` | rooms and racks **with what is in them** |
+| `get_connectcad_signals` / `_connectors` | the `CC_Get*Data` catalogs |
+| `get_connectcad_schedule` | equipment/circuit/cable/rack/room rows as JSON |
+| `connectcad_worksheet` | database worksheet for a schedule, verified cell by cell |
+| `get_braceworks_hoists` | hoists with capacity, point load, **overload flag** |
+| `get_braceworks_trusses` | straight/curved trusses, length, distributed weight |
+| `get_braceworks_loads` | per-origin totals: hoists, load, capacity, reaction force |
+
+Findings that cost a crash or a silent zero (all coded in):
+
+- **`CC_GetCircuitSource` / `CC_GetCircuitDest` hard-crash VW2027** — process
+  death, no dialog, the pump never returns. Never call them; the `Src_*`/`Dst_*`
+  record fields carry the same topology.
+- **The hoist plug-in is `HoistVW`, not `Hoist`** — `'Hoist'` builds a legacy
+  object with none of the load fields.
+- **Braceworks stores mass twice**: a localized string (`'50,00 kg'`) and a raw
+  number in the document's internal unit, which is **grams** on a metric
+  document (`MaximumLoad = 50000`). The scale is derived from the pair the
+  object reports (`mass_scale`), never assumed.
+- **ConnectCAD numbers are localized text with exponents** (`'-1,2e01'`,
+  `'4,826e02'`) — `float()` fails on both parts; use `_cnum`.
+- **A worksheet database row binds in COLUMN 0**, not column 1. In column 1 the
+  text is stored as a plain cell and recalculates to zero subrows — the exact
+  look of an empty sheet.
+- **A popup field renders its choice label** (`'VideoJack'` -> `'Video
+  Jackfield'`), so `_verify_sheet` compares presence for `GetFldType == 8`.
+- **MVR/GDTF have no `vs.*` surface at all** on VW2027 (0 functions); it is a
+  menu command with a dialog, so it is deliberately not wrapped.
+
 Lighting Device parameters are addressed by **universal (worksheet) name**, not
 index: `vs.LDevice_GetParamStr(h, cell, accessory, 'channel')` — `cell` 0-based,
 `accessory` **-1 = the device itself**, `>=0` = an attached accessory. A wrong
@@ -377,13 +415,25 @@ Without it the verbs still work and say `catalog: fallback`.
   `tool.tags` afterward does not affect `enable/disable`.
 - Tool bodies return a JSON **string** via `cmd(command_type, params)`; the actual
   `vs.*` work lives in `vwx-plugin/commands.py` (runs inside VW, hot-reloads per call).
+- **VW keeps the Python interpreter alive across menu commands.** A module
+  imported with `from X import Y` keeps the object bound at the first call of the
+  session, so a redeployed `vwx_verbs.py` is ignored and the new module answers
+  "Unknown command" while the file on disk looks right. Read such lists through
+  the pump's `_get_module(name)` (mtime-reloading) or `importlib.reload` — never
+  a bare `from X import Y`. The same trap applies to helpers imported across
+  fork modules: look them up through the module at call time.
 
 ## Adding a tool — checklist
 
-1. Implement the verb in `vwx-plugin/commands.py` (the `vs.*` side). Mind the gotchas above.
-2. Add a `@vtool` wrapper in `mcp-server/vwx_mcp_server.py` calling `cmd("your_verb", {...})`.
-3. Add `"your_verb": "<tag>"` to `mcp-server/tool_tags.py`.
-4. Smoke-test against a live VW (no CI can — every tool hits the running app).
+1. Implement the verb in a fork module (`vwx-plugin/commands_<area>.py`) — NOT in
+   `commands.py`, which stays vendored and rebaseable. Mind the gotchas above.
+2. Add the module to `vwx-plugin/vwx_verbs.py` (`MODULES`) — that one tuple feeds
+   both the pump's dispatch and `list_commands`.
+3. Add a `@vtool` wrapper in `mcp-server/<area>_tools.py` and import that module
+   from `mcp-server/fork_tools.py` (one line; `vwx_mcp_server.py` stays untouched).
+4. Add `"your_verb": "<tag>"` to `mcp-server/tool_tags.py`, and the module name to
+   `tests/test_tool_tags.py`'s scan list.
+5. Smoke-test against a live VW (no CI can — every tool hits the running app).
 
 ## Environment variables
 

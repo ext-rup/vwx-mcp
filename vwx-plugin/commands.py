@@ -5138,10 +5138,18 @@ def list_commands(p):
     # a vendored upstream file). Merge them so discovery stays one call.
     spaces = [globals()]
     try:
-        import commands_spotlight as _spot
-        spaces.append(vars(_spot))
+        # reload: VW keeps the interpreter alive, so a cached vwx_verbs would
+        # hide a module added by a redeploy (see vwx_pump._dispatch).
+        import importlib, vwx_verbs
+        importlib.reload(vwx_verbs)
+        _mods = vwx_verbs.MODULES
     except Exception:
-        pass
+        _mods = ('commands_spotlight',)
+    for _mod in _mods:
+        try:
+            spaces.append(vars(__import__(_mod)))
+        except Exception:
+            pass
     out = []
     seen = set()
     for space in spaces:

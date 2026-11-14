@@ -180,14 +180,33 @@ def _dispatch(cmd, params):
     try:
         fn = getattr(_get_commands(), cmd, None)
         if fn is None:
-            # Spotlight verbs live in their own module so commands.py can stay
-            # a vendored upstream file (QUICKSTART rule 4). Same hot-reload
-            # contract, and a missing module simply means "unknown command".
+            # Fork verbs live in their own modules so commands.py can stay a
+            # vendored upstream file (QUICKSTART rule 4). Same hot-reload
+            # contract, and a module that will not import simply means
+            # "unknown command" — a broken fork module must never take the
+            # vendored verbs down with it.
             try:
-                fn = getattr(_get_module('commands_spotlight'), cmd, None)
-            except Exception as e:
-                _log("commands_spotlight not loadable: %s" % e)
-                fn = None
+                # Through _get_module, NOT `from vwx_verbs import MODULES`:
+                # VW keeps the Python interpreter alive across menu commands,
+                # so a plain import returns the module object cached at the
+                # first call of the session — a redeployed vwx_verbs.py would
+                # be ignored and the new module would answer "Unknown command".
+                _mods = _get_module('vwx_verbs').MODULES
+            except Exception:
+                _mods = ('commands_spotlight',)
+            for _mod in _mods:
+                # Reload EVERY fork module first (mtime check only), so a
+                # module that imports a helper from another one — connectcad
+                # uses spotlight's read-back comparison — sees the fresh
+                # version instead of whatever was bound at first import.
+                try:
+                    _get_module(_mod)
+                except Exception as e:
+                    _log("%s not loadable: %s" % (_mod, e))
+                    continue
+                fn = getattr(sys.modules.get(_mod) or _get_module(_mod), cmd, None)
+                if fn is not None:
+                    break
         if fn is None:
             return {'error': 'Unknown command: %s' % cmd}
         return fn(params)
