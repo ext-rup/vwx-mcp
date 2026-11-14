@@ -423,6 +423,14 @@ input, briefly focuses VW). The menu command must be in the workspace:
 0 is dropped silently, so the script allocates a real ID.
 Without it the verbs still work and say `catalog: fallback`.
 
+## macOS
+
+Everything here was built on Windows. `docs/MACOS.md` is the handoff: what is
+portable as-is (all the fork verbs — they are pure `vs.*`), what is Windows-only
+and where (`_plugin_dir`, `vw_versions`, `screenshot`, `vw_dialog*`,
+`vwx_gui.py`, `bridge/*`), and the acceptance tests to run before calling a port
+done. The transport default differs: `file` on Windows, `tcp` on macOS.
+
 ## Server internals (for tool authors)
 
 - **`@mcp.tool(output_schema=None)`**, never `structured_output=False`. The server
