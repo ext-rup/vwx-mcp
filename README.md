@@ -44,10 +44,17 @@ bridge remains for macOS/remote (`VWX_TRANSPORT=tcp`, [legacy/](legacy/README.md
    steps below. After a major-version upgrade, recreate the menu command (step 5)
    and the menu entries in the new version; migrated ones do not work (see
    [docs/VECTORWORKS_2027.md](docs/VECTORWORKS_2027.md)).
-2. Copy `mcp-server/vwx_mcp_server.py`, `mcp-server/tool_tags.py`, and
-   `mcp-server/requirements.txt` to `%USERPROFILE%\.local\share\vwx-mcp\`
-3. Copy `bridge/vwx-mcp.bat` to `%USERPROFILE%\bridge\`. `python` on PATH —
-   the launcher creates a venv + installs `fastmcp` on first run.
+2. **Server**: `powershell -ExecutionPolicy Bypass -File bridge\install_server.ps1`
+   copies the vendored server **and every fork module** to
+   `%USERPROFILE%\.local\share\vwx-mcp\`, creates the venv, installs
+   `requirements.txt`, and verifies the modules import. (Copying only
+   `vwx_mcp_server.py` + `tool_tags.py` + `requirements.txt` — the list this
+   README used to give — installs the 272 upstream tools and none of the fork's
+   18: `fork_tools.py` imports them by name.) Re-run it to refresh.
+3. **Launchers**: the same script writes `%USERPROFILE%\bridge\vwx-mcp.bat`
+   (server) and `vwx-watch.bat` (the file transport's trigger, until the native
+   palette is built). Register the server with your client, e.g.
+   `claude mcp add --transport http vwx http://127.0.0.1:8082/mcp`.
 4. **Native palette**: build `native/VwxBridge2027.vcxproj` (VS2022 BuildTools,
    `VWSDK2027` env → SDK root containing `SDKLib`), then copy
    `native/Output/2027/Release/VwxBridge.vlb` + `VwxBridge.vwr` to
